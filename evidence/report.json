@@ -1,0 +1,106 @@
+{
+  "generatedAt": "2026-11-18T19:07:56.539Z",
+  "vmTarget": "BCH_2026_05",
+  "contracts": {
+    "BlazeForge": {
+      "addressType": "p2sh32",
+      "bytesize": 808,
+      "opcount": 199,
+      "usesLaylaLoops": true
+    },
+    "StampDispenser": {
+      "addressType": "p2sh32",
+      "bytesize": 118,
+      "opcount": 56,
+      "usesLaylaLoops": true
+    }
+  },
+  "runs": [
+    {
+      "action": "Button #1: StampDispenser.claim5 (5 Demo Stamps)",
+      "txid": "099c25af160f7ce5f5eed4a9a38069754c3efb254c7bf978457d19f8e37bd037",
+      "txBytes": 800,
+      "covenantOpCost": 22501,
+      "maxOpCost": 149600
+    },
+    {
+      "action": "Button #3: BlazeForge.forge Tier 5 (0-Conf Chained Medallion)",
+      "txid": "4ba796812fb407c4ac476d9d427860b2df750534c5f1a29109299ce738525128",
+      "txBytes": 1763,
+      "feeSats": 2645,
+      "zeroConfChained": true,
+      "covenantOpCost": 103077,
+      "maxOpCost": 687200
+    },
+    {
+      "action": "BlazeForge.forge Tier 9 (BLAZE Trophy, 0-Conf Chained)",
+      "txid": "4a513576c1f5b4033c3ab5e4b41608ebac3a33fdfd179af8ab29f030ae8209cf",
+      "txBytes": 2335,
+      "feeSats": 3503,
+      "zeroConfChained": true,
+      "covenantOpCost": 174881,
+      "maxOpCost": 690400
+    },
+    {
+      "action": "BlazeForge.forge Tier 10 (Trailblazer Trophy, 0-Conf Chained)",
+      "txid": "5c86419b83d120254af030ffe2d4c8a77a857d016680d8e179db12a47061b9bb",
+      "txBytes": 2478,
+      "feeSats": 3717,
+      "zeroConfChained": true,
+      "covenantOpCost": 192370,
+      "maxOpCost": 691200
+    }
+  ],
+  "adversarialRejections": [
+    {
+      "attack": "under-count-4",
+      "label": "Forge Medallion with only 4 Stamps",
+      "expectedRule": "require(tier == 5 || tier == 9 || tier == 10)",
+      "rejected": true,
+      "vmError": "BlazeForge.cash:19 Require statement failed at input 0 in contract BlazeForge.cash at line 19.\nFailing statement: require(tier == 5 || tier == 9 || tier == 10);",
+      "failingContract": "BlazeForge.cash",
+      "failingLine": 19
+    },
+    {
+      "attack": "duplicate-slot",
+      "label": "Forge Medallion using Duplicate Copies of Stamp #1",
+      "expectedRule": "require(slot > prevSlot)",
+      "rejected": true,
+      "vmError": "BlazeForge.cash:43 Require statement failed at input 0 in contract BlazeForge.cash at line 43.\nFailing statement: require(slot > prevSlot);",
+      "failingContract": "BlazeForge.cash",
+      "failingLine": 43
+    },
+    {
+      "attack": "fake-category",
+      "label": "Forge Medallion with Unregistered Fake Token Category",
+      "expectedRule": "require(actualCat == expectedCat)",
+      "rejected": true,
+      "vmError": "BlazeForge.cash:56 Require statement failed at input 0 in contract BlazeForge.cash at line 56.\nFailing statement: require(actualCat == expectedCat);",
+      "failingContract": "BlazeForge.cash",
+      "failingLine": 56
+    },
+    {
+      "attack": "anti-burn-keep-stamps",
+      "label": "Anti-Burn Cheat: Try Keeping Stamp #5 in Change Output",
+      "expectedRule": "require(tx.outputs[2].tokenCategory == 0x)",
+      "rejected": true,
+      "vmError": "BlazeForge.cash:79 Require statement failed at input 0 in contract BlazeForge.cash at line 79.\nFailing statement: require(tx.outputs[2].tokenCategory == 0x);",
+      "failingContract": "BlazeForge.cash",
+      "failingLine": 79
+    },
+    {
+      "attack": "steal-baton",
+      "label": "Baton Hijack: Redirect Forge Minting Baton to Attacker Address",
+      "expectedRule": "require(tx.outputs[0].lockingBytecode == tx.inputs[0].lockingBytecode)",
+      "rejected": true,
+      "vmError": "BlazeForge.cash:25 Require statement failed at input 0 in contract BlazeForge.cash at line 25.\nFailing statement: require(tx.outputs[0].lockingBytecode == tx.inputs[0].lockingBytecode);",
+      "failingContract": "BlazeForge.cash",
+      "failingLine": 25
+    }
+  ],
+  "summary": {
+    "totalAdversarialAttacks": 5,
+    "attacksRejected": 5,
+    "allRejected": true
+  }
+}
