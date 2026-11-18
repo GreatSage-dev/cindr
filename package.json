@@ -1,0 +1,26 @@
+{
+  "name": "blaze-forge",
+  "version": "0.1.0",
+  "description": "BLAZE Forge / StampForge: CashTokens Burn-to-Mint Loop Covenant & 0-Conf BuildForgeTx Engine for BCH BLAZE 2026",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "start": "tsx src/server.ts",
+    "build": "tsc",
+    "verify": "vitest run",
+    "smoke": "tsx scripts/smoke.ts",
+    "check:words": "node scripts/plain-words-check.mjs",
+    "evidence": "tsx scripts/generate-evidence.ts"
+  },
+  "dependencies": {
+    "@bitauth/libauth": "^3.0.0",
+    "cashc": "^0.14.0",
+    "cashscript": "^0.14.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}

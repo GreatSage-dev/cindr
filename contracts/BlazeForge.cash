@@ -1,0 +1,82 @@
+pragma cashscript ^0.14.0;
+
+// BlazeForge / StampForge: Universal CashTokens Burn-to-Mint Loop Covenant
+//
+// Registry format (33 bytes per slot):
+//   [bytes32 categoryId][bytes1 commitmentRule]
+//   - commitmentRule == 0xff -> accept any NFT commitment or fungible token (>= 1) of categoryId
+//   - commitmentRule != 0xff -> require NFT with exact 1-byte commitment == commitmentRule
+//
+// Built for BCH BLAZE 2026 TokenHunt (drop-in for buildForgeTx(utxos, tier) in tokenhunt.js)
+// and reusable for Paytaca merchant loyalty punch-cards & credential forging.
+contract BlazeForge(
+    bytes32 forgeCategory,
+    int numSlots,
+    bytes registry
+) {
+    function forge(int tier, bytes slotIndexes) {
+        // 1. Supported Trophy Tiers: 5 (BLAZE Medallion), 9 (BLAZE Trophy), 10 (Trailblazer Trophy)
+        require(tier == 5 || tier == 9 || tier == 10);
+        require(slotIndexes.length == tier);
+        require(tx.inputs.length >= 1 + tier);
+
+        // 2. Preserve the Forge Minting Baton NFT at Output 0 for instant 0-conf chaining
+        require(tx.inputs[0].tokenCategory == forgeCategory + 0x02);
+        require(tx.outputs[0].lockingBytecode == tx.inputs[0].lockingBytecode);
+        require(tx.outputs[0].tokenCategory == forgeCategory + 0x02);
+        require(tx.outputs[0].tokenAmount == 0);
+        require(tx.outputs[0].value >= 1000);
+        require(tx.outputs[0].value >= tx.inputs[0].value);
+
+        // 3. Layla (May 2026) OP_BEGIN / OP_UNTIL loop verifying distinct registered stamps [1..tier]
+        int prevSlot = -1;
+        bytes remainingSlots = slotIndexes;
+        bytes usedSlots = 0x;
+        int i = 1;
+
+        do {
+            bytes slotByte, bytes nextRemaining = remainingSlots.split(1);
+            remainingSlots = nextRemaining;
+            int slot = int(slotByte);
+
+            // Strictly ascending canonical slot indices prevent duplicate or negative-zero slot reuse
+            require(slot > prevSlot);
+            require(slot < numSlots);
+            require(slotByte == toPaddedBytes(slot, 1));
+
+            // Read 33-byte slot entry from packed registry: [32B category][1B rule]
+            bytes entry = registry.split(slot * 33)[1].split(33)[0];
+            bytes expectedCat, bytes expectedRule = entry.split(32);
+
+            // Verify stamp input carries the registered token category.
+            // Under CashTokens consensus any UTXO with tokenCategory.length >= 32 holds FT >= 1 and/or an NFT
+            // (immutable NFTs have 32-byte tokenCategory; mutable/minting NFTs have 33 bytes).
+            require(tx.inputs[i].tokenCategory.length >= 32);
+            bytes actualCat = tx.inputs[i].tokenCategory.split(32)[0];
+            require(actualCat == expectedCat);
+
+            // If slot locks a specific 1-byte NFT commitment (e.g. Demo Stamps 0x01..0x05), require exact match
+            if (expectedRule != 0xff) {
+                require(tx.inputs[i].nftCommitment == expectedRule);
+            }
+
+            usedSlots = usedSlots + slotByte;
+            prevSlot = slot;
+            i = i + 1;
+        } while (i <= tier);
+
+        require(i == tier + 1);
+
+        // 4. Output 1 mints the immutable Trophy NFT with provenance commitment [tier][burned slots...]
+        require(tx.outputs[1].tokenCategory == forgeCategory);
+        require(tx.outputs[1].tokenAmount == 0);
+        require(tx.outputs[1].nftCommitment == toPaddedBytes(tier, 1) + usedSlots);
+        require(tx.outputs[1].value >= 1000);
+
+        // 5. Consensus Burn Proof: no other token outputs allowed -> all input stamps are burned
+        require(tx.outputs.length <= 3);
+        if (tx.outputs.length == 3) {
+            require(tx.outputs[2].tokenCategory == 0x);
+        }
+    }
+}
