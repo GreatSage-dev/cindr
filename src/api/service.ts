@@ -1,11 +1,14 @@
+import { randomBytes } from 'node:crypto';
 import {
   Contract,
+  ElectrumNetworkProvider,
   MockNetworkProvider,
   SignatureTemplate,
   randomUtxo,
   type NetworkProvider,
   type SpendableUtxo,
 } from 'cashscript';
+import type { Artifact } from '@cashscript/utils';
 import {
   binToHex,
   encodeCashAddress,
@@ -15,8 +18,10 @@ import {
   secp256k1,
 } from '@bitauth/libauth';
 import { BlazeForgeArtifact, StampDispenserArtifact } from '../artifacts.js';
+import { loadAppConfig, type BchNetworkMode } from '../config.js';
 import {
   BatonMempoolTracker,
+  ForgeValidationError,
   addressToLockingBytecode,
   buildClaimDemoStampsTx,
   buildForgeTx,
@@ -25,13 +30,12 @@ import {
   normalizeUtxoList,
   outpointKey,
   runAdversarialForgeAttack,
-  type AdversarialAttackKind,
+  toTokenAwareNetworkAddress,
   type WalletTokenUtxoLike,
 } from '../buildForgeTx.js';
 import {
   TROPHY_TIERS,
   createBlazeTokenHuntRegistry,
-  createMerchantLoyaltyRegistry,
   type StampSlot,
 } from '../registry.js';
 import type {
@@ -45,23 +49,52 @@ import type {
   ForgeResponse,
   HealthResponse,
   RegistryResponse,
+  WalletDemoResponse,
+  WalletOverviewResponse,
+  WalletStampItem,
+  WalletTrophyItem,
 } from './types.js';
+
+export class PrivateKeyRejectedError extends Error {
+  readonly statusCode = 400;
+  readonly code = 'PRIVATE_KEY_NOT_ALLOWED';
+
+  constructor(
+    message = 'signerPrivKeyHex over HTTP is only permitted in mock or explicit local-signing test mode; sign transactions client-side via wcTransaction.'
+  ) {
+    super(message);
+    this.name = 'PrivateKeyRejectedError';
+  }
+}
 
 export interface BlazeBackendServiceOptions {
   provider?: NetworkProvider;
+  networkMode?: BchNetworkMode;
   forgeCategory?: string;
   demoCategory?: string;
   slots?: readonly StampSlot[];
   batonTracker?: BatonMempoolTracker;
   faucetPrivKeyHex?: string;
+  allowUnsafeLocalSigning?: boolean;
 }
 
-const DEFAULT_FORGE_CATEGORY = 'aa' + '42'.repeat(30) + 'cc';
-const DEFAULT_DEMO_CATEGORY = 'dd' + '99'.repeat(30) + 'ee';
-const DEFAULT_FAUCET_PRIVKEY = '00'.repeat(31) + '09';
+function getTemplateBytecodeBytes(artifact: Artifact): number {
+  const hex = artifact.debug?.bytecode;
+  if (typeof hex === 'string' && hex.length > 0) {
+    return Math.floor(hex.length / 2);
+  }
+  return artifact.bytecode.split(/\s+/).filter(Boolean).length;
+}
+
+function getArtifactOpcodeCount(artifact: Artifact): number {
+  return artifact.bytecode.split(/\s+/).filter(Boolean).length;
+}
 
 export class BlazeBackendService {
   readonly provider: NetworkProvider;
+  readonly networkMode: BchNetworkMode;
+  readonly isMockMode: boolean;
+  readonly allowUnsafeLocalSigning: boolean;
   readonly forgeCategory: string;
   readonly demoCategory: string;
   readonly slots: readonly StampSlot[];
@@ -74,14 +107,30 @@ export class BlazeBackendService {
   private readonly faucetAddress: string;
   private readonly testSigners = new Map<string, SignatureTemplate>();
   private readonly startTime: number;
+  private sandboxWalletCount = 0;
 
   constructor(options: BlazeBackendServiceOptions = {}) {
+    const config = loadAppConfig();
     this.startTime = Date.now();
-    this.provider =
-      options.provider ?? new MockNetworkProvider({ vmTarget: 'BCH_2026_05' });
-    this.forgeCategory = (options.forgeCategory ?? DEFAULT_FORGE_CATEGORY).toLowerCase();
-    this.demoCategory = (options.demoCategory ?? DEFAULT_DEMO_CATEGORY).toLowerCase();
-    this.slots = options.slots ?? createBlazeTokenHuntRegistry(this.demoCategory);
+    this.networkMode = options.networkMode ?? config.bchNetwork;
+
+    if (options.provider) {
+      this.provider = options.provider;
+    } else if (this.networkMode === 'mock') {
+      this.provider = new MockNetworkProvider({ vmTarget: 'BCH_2026_05' });
+    } else {
+      this.provider = new ElectrumNetworkProvider(this.networkMode);
+    }
+
+    this.isMockMode = this.provider instanceof MockNetworkProvider;
+    this.allowUnsafeLocalSigning =
+      options.allowUnsafeLocalSigning ?? config.allowUnsafeLocalSigning;
+
+    this.forgeCategory = (options.forgeCategory ?? config.forgeCategory).toLowerCase();
+    this.demoCategory = (options.demoCategory ?? config.demoCategory).toLowerCase();
+    this.slots =
+      options.slots ??
+      createBlazeTokenHuntRegistry(this.demoCategory, config.tokenHuntOverrides);
     this.batonTracker = options.batonTracker ?? new BatonMempoolTracker();
 
     this.forge = instantiateForgeContract({
@@ -92,7 +141,7 @@ export class BlazeBackendService {
 
     this.dispenser = instantiateDispenserContract(this.provider, this.demoCategory);
 
-    const privHex = options.faucetPrivKeyHex ?? DEFAULT_FAUCET_PRIVKEY;
+    const privHex = (options.faucetPrivKeyHex ?? config.faucetPrivKeyHex).toLowerCase();
     this.faucetPrivKey = hexToBin(privHex);
     this.faucetSigner = new SignatureTemplate(this.faucetPrivKey);
 
@@ -100,8 +149,9 @@ export class BlazeBackendService {
     if (typeof pub === 'string') {
       throw new Error(`Failed to derive public key: ${pub}`);
     }
+    const addrPrefix = this.networkMode === 'mainnet' ? 'bitcoincash' : 'bchtest';
     this.faucetAddress = encodeCashAddress({
-      prefix: 'bchtest',
+      prefix: addrPrefix,
       type: 'p2pkhWithTokens',
       payload: hash160(pub),
     }).address;
@@ -109,12 +159,15 @@ export class BlazeBackendService {
     this.initContractBatons();
   }
 
+  private addressPrefix(): 'bitcoincash' | 'bchtest' {
+    return this.networkMode === 'mainnet' ? 'bitcoincash' : 'bchtest';
+  }
+
   /**
-   * Seeds initial Minting Baton UTXOs in mock provider if none exist.
+   * Seeds initial Minting Baton UTXOs in mock provider if running locally in sandbox mode.
    */
   private initContractBatons(): void {
     if (this.provider instanceof MockNetworkProvider) {
-      // Seed Forge Baton at vout 0
       this.provider.addUtxo(
         this.forge.tokenAddress,
         randomUtxo({
@@ -128,7 +181,6 @@ export class BlazeBackendService {
         })
       );
 
-      // Seed Dispenser Baton at vout 0
       this.provider.addUtxo(
         this.dispenser.tokenAddress,
         randomUtxo({
@@ -142,7 +194,6 @@ export class BlazeBackendService {
         })
       );
 
-      // Seed Faucet UTXO
       this.provider.addUtxo(
         this.faucetAddress,
         randomUtxo({
@@ -161,13 +212,14 @@ export class BlazeBackendService {
     const pub = secp256k1.derivePublicKeyCompressed(priv);
     if (typeof pub === 'string') throw new Error(pub);
     const addr = encodeCashAddress({
-      prefix: 'bchtest',
+      prefix: this.addressPrefix(),
       type: 'p2pkhWithTokens',
       payload: hash160(pub),
     }).address;
     this.testSigners.set(addr, new SignatureTemplate(priv));
     return addr;
   }
+
   async ensureFeeUtxos(address: string, requiredSats: bigint = 25000n): Promise<SpendableUtxo[]> {
     const existing = await this.provider.getUtxos(address);
     const pureBch = existing.filter((u) => !u.token && u.satoshis >= 1500n);
@@ -191,22 +243,140 @@ export class BlazeBackendService {
     return pureBch;
   }
 
-  getHealth(): HealthResponse {
-    const forgeBytes = (BlazeForgeArtifact as any).debug?.bytecode?.length
-      ? (BlazeForgeArtifact as any).debug.bytecode.length / 2
-      : 233;
-    const dispenserBytes = (StampDispenserArtifact as any).debug?.bytecode?.length
-      ? (StampDispenserArtifact as any).debug.bytecode.length / 2
-      : 90;
+  /**
+   * Provisions an ephemeral sandbox wallet inside MockNetworkProvider so UI users
+   * can test 1-click claiming, forging, and 0-conf multi-user baton handoffs
+   * without sending private keys over HTTP.
+   */
+  async createDemoWallet(): Promise<WalletDemoResponse> {
+    if (!this.isMockMode) {
+      throw new ForgeValidationError(
+        'SANDBOX_WALLET_UNAVAILABLE',
+        'Demo sandbox wallets are only available when BCH_NETWORK=mock. Connect or enter your own CashAddress instead.'
+      );
+    }
+
+    let priv = randomBytes(32);
+    let pub = secp256k1.derivePublicKeyCompressed(priv);
+    while (typeof pub === 'string') {
+      priv = randomBytes(32);
+      pub = secp256k1.derivePublicKeyCompressed(priv);
+    }
+
+    const address = encodeCashAddress({
+      prefix: this.addressPrefix(),
+      type: 'p2pkhWithTokens',
+      payload: hash160(pub),
+    }).address;
+
+    this.testSigners.set(address, new SignatureTemplate(priv));
+    const funded = (this.provider as MockNetworkProvider).addUtxo(
+      address,
+      randomUtxo({ satoshis: 50_000n })
+    );
+
+    this.sandboxWalletCount += 1;
+    return {
+      address,
+      label: `Sandbox #${this.sandboxWalletCount}`,
+      mode: 'sandbox',
+      bchSatoshis: Number(funded.satoshis),
+    };
+  }
+
+  /**
+   * Inspects live UTXOs for any CashAddress, classifying held registered Stamp slots,
+   * previously forged Trophy NFTs, pure BCH balance, and eligible tiers.
+   */
+  async getWalletOverview(address: string): Promise<WalletOverviewResponse> {
+    const normalizedAddr = toTokenAwareNetworkAddress(address, this.addressPrefix());
+    const utxos = await this.provider.getUtxos(normalizedAddr);
+
+    let bchSatoshis = 0n;
+    const stamps: WalletStampItem[] = [];
+    const trophies: WalletTrophyItem[] = [];
+    const distinctSlots = new Set<number>();
+
+    for (const u of utxos) {
+      if (!u.token) {
+        bchSatoshis += u.satoshis;
+        continue;
+      }
+
+      const cat = u.token.category.toLowerCase();
+      if (cat === this.forgeCategory && u.token.nft?.capability === 'none') {
+        const commitmentHex = (u.token.nft.commitment ?? '').toLowerCase();
+        const bytes = hexToBin(commitmentHex);
+        const tier = bytes.length > 0 ? bytes[0] : 0;
+        const burnedSlots = Array.from(bytes.slice(1));
+        const tierDef = TROPHY_TIERS.find((t) => t.min === tier);
+        trophies.push({
+          tier,
+          tierName: tierDef?.name ?? `Tier ${tier} Trophy`,
+          category: cat,
+          commitmentHex,
+          burnedSlots,
+          txid: u.txid,
+          vout: u.vout,
+          satoshis: Number(u.satoshis),
+        });
+        continue;
+      }
+
+      const commitHex = u.token.nft?.commitment?.toLowerCase() ?? '';
+      const matchedSlot = this.slots.find((slot) => {
+        if (slot.category.toLowerCase() !== cat) return false;
+        if (slot.commitmentRule === null) {
+          return u.token!.amount >= 1n || Boolean(u.token!.nft);
+        }
+        const expectedCommit = slot.commitmentRule.toString(16).padStart(2, '0');
+        return Boolean(u.token!.nft && commitHex === expectedCommit);
+      });
+
+      if (matchedSlot) {
+        distinctSlots.add(matchedSlot.slot);
+        stamps.push({
+          slot: matchedSlot.slot,
+          id: matchedSlot.id,
+          name: matchedSlot.name,
+          kind: matchedSlot.kind,
+          category: cat,
+          commitment: commitHex,
+          txid: u.txid,
+          vout: u.vout,
+          satoshis: Number(u.satoshis),
+        });
+      }
+    }
+
+    stamps.sort((a, b) => a.slot - b.slot);
+    const eligibleTiers = TROPHY_TIERS
+      .filter((t) => distinctSlots.size >= t.min)
+      .map((t) => t.min);
 
     return {
+      address: normalizedAddr,
+      mode: this.testSigners.has(normalizedAddr) ? 'sandbox' : 'external',
+      bchSatoshis: Number(bchSatoshis),
+      utxoCount: utxos.length,
+      stamps,
+      trophies,
+      eligibleTiers,
+    };
+  }
+
+  getHealth(): HealthResponse {
+    return {
       status: 'healthy',
+      networkMode: this.networkMode,
       networkTarget: 'BCH_2026_05',
       contracts: {
         forge: {
           name: 'BlazeForge',
-          bytecodeBytes: forgeBytes,
-          opcodesCount: BlazeForgeArtifact.bytecode.split(' ').length,
+          bytecodeBytes: getTemplateBytecodeBytes(BlazeForgeArtifact),
+          opcodesCount: getArtifactOpcodeCount(BlazeForgeArtifact),
+          redeemScriptBytes: this.forge.bytesize,
+          redeemOpcodesCount: this.forge.opcount,
           hasLaylaLoops:
             BlazeForgeArtifact.bytecode.includes('OP_BEGIN') &&
             BlazeForgeArtifact.bytecode.includes('OP_UNTIL'),
@@ -214,14 +384,16 @@ export class BlazeBackendService {
         },
         dispenser: {
           name: 'StampDispenser',
-          bytecodeBytes: dispenserBytes,
-          opcodesCount: StampDispenserArtifact.bytecode.split(' ').length,
+          bytecodeBytes: getTemplateBytecodeBytes(StampDispenserArtifact),
+          opcodesCount: getArtifactOpcodeCount(StampDispenserArtifact),
+          redeemScriptBytes: this.dispenser.bytesize,
+          redeemOpcodesCount: this.dispenser.opcount,
           hasLaylaLoops: StampDispenserArtifact.bytecode.includes('OP_BEGIN'),
           tokenAddress: this.dispenser.tokenAddress,
         },
       },
       zeroConfMempool: {
-        pendingTrackedOutpoints: (this.batonTracker as any).pending?.size ?? 0,
+        pendingTrackedOutpoints: this.batonTracker.pendingCount(),
         explanation:
           'Powered by BCH 0-Conf Covenant Chaining: spent baton outputs chain directly in mempool without waiting 10 minutes for block confirmation.',
       },
@@ -243,48 +415,49 @@ export class BlazeBackendService {
     };
   }
 
+  private resolveSafeBatonOutpoint(
+    tokenAddress: string,
+    utxos: readonly SpendableUtxo[],
+    category: string
+  ): string {
+    try {
+      const resolved = this.batonTracker.resolve(tokenAddress, utxos, category, true);
+      return outpointKey(resolved.utxo);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.startsWith('No Minting Baton UTXO found')) {
+        return 'none';
+      }
+      throw err;
+    }
+  }
+
   async getBatonStatus(): Promise<BatonStatusResponse> {
-    const forgeUtxos = await this.provider.getUtxos(this.forge.tokenAddress);
-    const dispenserUtxos = await this.provider.getUtxos(this.dispenser.tokenAddress);
-
-    let forgeResolved = 'none';
-    try {
-      const resolved = this.batonTracker.resolve(
-        this.forge.tokenAddress,
-        forgeUtxos,
-        this.forgeCategory,
-        true
-      );
-      forgeResolved = outpointKey(resolved.utxo);
-    } catch {
-      // no live baton
-    }
-
-    let dispenserResolved = 'none';
-    try {
-      const resolved = this.batonTracker.resolve(
-        this.dispenser.tokenAddress,
-        dispenserUtxos,
-        this.demoCategory,
-        true
-      );
-      dispenserResolved = outpointKey(resolved.utxo);
-    } catch {
-      // no live baton
-    }
+    const [forgeUtxos, dispenserUtxos] = await Promise.all([
+      this.provider.getUtxos(this.forge.tokenAddress),
+      this.provider.getUtxos(this.dispenser.tokenAddress),
+    ]);
 
     return {
       forge: {
         contractAddress: this.forge.address,
         tokenAddress: this.forge.tokenAddress,
-        currentBatonOutpoint: forgeResolved,
+        currentBatonOutpoint: this.resolveSafeBatonOutpoint(
+          this.forge.tokenAddress,
+          forgeUtxos,
+          this.forgeCategory
+        ),
       },
       dispenser: {
         contractAddress: this.dispenser.address,
         tokenAddress: this.dispenser.tokenAddress,
-        currentBatonOutpoint: dispenserResolved,
+        currentBatonOutpoint: this.resolveSafeBatonOutpoint(
+          this.dispenser.tokenAddress,
+          dispenserUtxos,
+          this.demoCategory
+        ),
       },
-      pendingZeroConfChains: (this.batonTracker as any).pending?.size ?? 0,
+      pendingZeroConfChains: this.batonTracker.pendingCount(),
       zeroConfExplanation:
         'BCH allows spending unconfirmed outputs (includeUnconfirmed: true), enabling sequential 0-conf mints and forges in <2 seconds.',
     };
@@ -292,14 +465,10 @@ export class BlazeBackendService {
 
   async claimDemoStamps(req: ClaimStampsRequest): Promise<ClaimStampsResponse> {
     const startMs = Date.now();
-    const recipient = req.recipientAddress;
-
-    // Validate CashAddress
-    addressToLockingBytecode(recipient);
+    const recipient = toTokenAwareNetworkAddress(req.recipientAddress, this.addressPrefix());
 
     const feeUtxos = await this.ensureFeeUtxos(this.faucetAddress, 25000n);
 
-    // Build the 0-conf claim transaction
     const claim = await buildClaimDemoStampsTx({
       provider: this.provider,
       forgeCategory: this.forgeCategory,
@@ -318,19 +487,19 @@ export class BlazeBackendService {
       txid = sent.txid;
     }
 
-    const stamps: ClaimedStampItem[] = [1, 2, 3, 4, 5].map((slotNum) => {
-      const slotDef = this.slots.find((s) => s.slot === slotNum);
-      const commit = slotNum.toString(16).padStart(2, '0');
+    const demoSlots = this.slots.filter((s) => s.kind === 'demo');
+    const stamps: ClaimedStampItem[] = [1, 2, 3, 4, 5].map((commitNum, idx) => {
+      const slotDef =
+        demoSlots.find((s) => s.commitmentRule === commitNum) ?? demoSlots[idx];
+      const commit = commitNum.toString(16).padStart(2, '0');
       return {
-        slot: slotNum,
-        id: slotDef?.id ?? `slot-${slotNum}`,
-        name: slotDef?.name ?? `Demo Stamp #${slotNum}`,
+        slot: slotDef?.slot ?? 10 + idx,
+        id: slotDef?.id ?? `demo-stamp-${commitNum}`,
+        name: slotDef?.name ?? `Demo Stamp #${commitNum}`,
         category: this.demoCategory,
         commitment: commit,
       };
     });
-
-    const elapsed = Date.now() - startMs;
 
     return {
       success: true,
@@ -341,9 +510,9 @@ export class BlazeBackendService {
       nextBatonOutpoint: outpointKey(claim.nextBatonUtxo),
       zeroConfChained: true,
       receipt: {
-        executionTimeMs: elapsed,
+        executionTimeMs: Date.now() - startMs,
         txBytes: claim.txHex.length / 2,
-        estimatedFeeSats: 1500,
+        estimatedFeeSats: Number(claim.estimatedFeeSats),
       },
     };
   }
@@ -354,51 +523,59 @@ export class BlazeBackendService {
     const tier = req.tier;
 
     if (tier !== 5 && tier !== 9 && tier !== 10) {
-      throw new Error(`Unsupported Forge tier ${tier}. Expected 5, 9, or 10`);
+      throw new ForgeValidationError(
+        'INVALID_TIER',
+        `Unsupported Forge tier ${tier}. Expected 5, 9, or 10`
+      );
     }
 
-    addressToLockingBytecode(recipient);
-
-    // Collect UTXOs: if caller passed explicit utxos, use them. Otherwise fetch from provider.
-    let availableUtxos = req.utxos ? normalizeUtxoList(req.utxos) : [];
-    if (availableUtxos.length === 0) {
-      const providerUtxos = await this.provider.getUtxos(recipient);
-      availableUtxos = providerUtxos.map((u) => ({ ...u, path: null }));
+    if (req.signerPrivKeyHex && !this.isMockMode && !this.allowUnsafeLocalSigning) {
+      throw new PrivateKeyRejectedError();
     }
 
-    // Ensure fee satoshis
-    await this.ensureFeeUtxos(recipient, 25000n);
-    const refreshedUtxos = await this.provider.getUtxos(recipient);
-    const allUtxos = (req.utxos ? availableUtxos : refreshedUtxos.map((u) => ({ ...u, path: null }))) as unknown as readonly WalletTokenUtxoLike[];
+    const normalizedRecipient = toTokenAwareNetworkAddress(recipient, this.addressPrefix());
 
-    const signer =
-      req.signerPrivKeyHex
-        ? new SignatureTemplate(hexToBin(req.signerPrivKeyHex))
-        : this.testSigners.get(recipient);
+    const feeUtxos = await this.ensureFeeUtxos(normalizedRecipient, 25000n);
+    const stampInputs: WalletTokenUtxoLike[] =
+      req.utxos && req.utxos.length > 0
+        ? normalizeUtxoList(req.utxos)
+        : (await this.provider.getUtxos(normalizedRecipient)).map((u) => ({ ...u, path: null }));
 
-    const built = await buildForgeTx(allUtxos, tier, {
+    const signer = req.signerPrivKeyHex
+      ? new SignatureTemplate(hexToBin(req.signerPrivKeyHex))
+      : this.testSigners.get(normalizedRecipient);
+
+    const built = await buildForgeTx(stampInputs, tier, {
       provider: this.provider,
       forgeCategory: this.forgeCategory,
       demoCategory: this.demoCategory,
       slots: this.slots,
-      recipientAddress: recipient,
+      recipientAddress: normalizedRecipient,
+      feeUtxos,
       signer,
       batonTracker: this.batonTracker,
       includeUnconfirmed: true,
     });
 
+    let broadcasted = false;
     let txid = binToHex(Uint8Array.from(hash256(hexToBin(built.txHex))).reverse());
     if (req.autoBroadcast !== false && signer) {
       const sent = await built.builder.send();
       txid = sent.txid;
+      broadcasted = true;
     }
-
-    const elapsed = Date.now() - startMs;
 
     return {
       success: true,
+      broadcasted,
       txid,
       txHex: built.txHex,
+      ...(broadcasted
+        ? {}
+        : {
+            wcTransaction: built.wcTransaction,
+            inputPaths: built.inputPaths,
+          }),
       trophy: {
         tier,
         tierName: built.summary.tierName,
@@ -411,7 +588,7 @@ export class BlazeBackendService {
       nextBatonOutpoint: outpointKey(built.nextBatonUtxo),
       zeroConfChained: built.summary.zeroConfChained,
       receipt: {
-        executionTimeMs: elapsed,
+        executionTimeMs: Date.now() - startMs,
         txBytes: Number(built.summary.txBytes),
       },
     };
@@ -425,8 +602,6 @@ export class BlazeBackendService {
       slots: this.slots,
     });
 
-    const elapsed = Date.now() - startMs;
-
     return {
       attack: result.attack,
       label: result.label,
@@ -436,7 +611,7 @@ export class BlazeBackendService {
       failingLine: result.failingLine,
       vmError: result.vmError,
       receipt: {
-        executionTimeMs: elapsed,
+        executionTimeMs: Date.now() - startMs,
         adversarialRefusalVerified: result.rejected,
       },
     };

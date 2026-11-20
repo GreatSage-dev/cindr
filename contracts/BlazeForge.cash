@@ -19,12 +19,14 @@ contract BlazeForge(
         require(tier == 5 || tier == 9 || tier == 10);
         require(slotIndexes.length == tier);
         require(tx.inputs.length >= 1 + tier);
+        require(this.activeInputIndex == 0);
 
         // 2. Preserve the Forge Minting Baton NFT at Output 0 for instant 0-conf chaining
         require(tx.inputs[0].tokenCategory == forgeCategory + 0x02);
         require(tx.outputs[0].lockingBytecode == tx.inputs[0].lockingBytecode);
         require(tx.outputs[0].tokenCategory == forgeCategory + 0x02);
         require(tx.outputs[0].tokenAmount == 0);
+        require(tx.outputs[0].nftCommitment == 0x);
         require(tx.outputs[0].value >= 1000);
         require(tx.outputs[0].value >= tx.inputs[0].value);
 

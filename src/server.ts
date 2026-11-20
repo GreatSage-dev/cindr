@@ -1,11 +1,20 @@
+import { randomUUID } from 'node:crypto';
 import { createServer, type Server } from 'node:http';
 import { fileURLToPath } from 'node:url';
+import { loadAppConfig } from './config.js';
 import { IdempotencyStore } from './api/idempotency.js';
-import { handleRequest, type RouteContext } from './api/routes.js';
+import {
+  createIpRateLimiter,
+  handleRequest,
+  sendError,
+  type RouteContext,
+} from './api/routes.js';
 import { BlazeBackendService, type BlazeBackendServiceOptions } from './api/service.js';
 
 export interface BlazeServerOptions extends BlazeBackendServiceOptions {
   idempotencyTtlMs?: number;
+  allowedOrigin?: string;
+  rateLimitMaxPerMin?: number;
 }
 
 export interface BlazeServerInstance {
@@ -16,65 +25,87 @@ export interface BlazeServerInstance {
 }
 
 export function createBlazeContext(options: BlazeServerOptions = {}): RouteContext {
+  const config = loadAppConfig();
   const service = new BlazeBackendService(options);
   const idempotencyStore = new IdempotencyStore(options.idempotencyTtlMs);
-  return { service, idempotencyStore };
+  const effectiveRateLimit =
+    options.rateLimitMaxPerMin ?? (process.env.VITEST ? undefined : config.rateLimitMaxPerMin);
+
+  return {
+    service,
+    idempotencyStore,
+    allowedOrigin: options.allowedOrigin ?? config.allowedOrigin,
+    rateLimiter: effectiveRateLimit ? createIpRateLimiter(effectiveRateLimit) : undefined,
+  };
+}
+
+function createHttpServer(ctx: RouteContext): Server {
+  return createServer(async (req, res) => {
+    const startedAt = Date.now();
+    const requestId = randomUUID().slice(0, 8);
+    try {
+      await handleRequest(req, res, ctx);
+    } catch (err: unknown) {
+      if (!process.env.VITEST) {
+        console.error(
+          JSON.stringify({
+            level: 'error',
+            requestId,
+            method: req.method,
+            url: req.url,
+            error: err instanceof Error ? err.message : String(err),
+          })
+        );
+      }
+      if (!res.headersSent) {
+        sendError(
+          res,
+          500,
+          'INTERNAL_SERVER_ERROR',
+          'An unexpected server error occurred',
+          undefined,
+          ctx
+        );
+      }
+    } finally {
+      if (!process.env.VITEST && req.url?.startsWith('/api/')) {
+        console.log(
+          JSON.stringify({
+            level: 'info',
+            requestId,
+            method: req.method,
+            url: req.url,
+            status: res.statusCode,
+            durationMs: Date.now() - startedAt,
+          })
+        );
+      }
+    }
+  });
 }
 
 export function createBlazeServer(options: BlazeServerOptions = {}): Server {
   const ctx = createBlazeContext(options);
-  return createServer(async (req, res) => {
-    try {
-      await handleRequest(req, res, ctx);
-    } catch (err: any) {
-      if (!res.headersSent) {
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(
-          JSON.stringify({
-            error: {
-              code: 'INTERNAL_SERVER_ERROR',
-              message: err?.message ?? 'An unexpected server error occurred',
-            },
-          })
-        );
-      }
-    }
-  });
+  return createHttpServer(ctx);
 }
 
 export async function startServer(
-  port: number = Number(process.env.PORT) || 3000,
+  port?: number,
   options: BlazeServerOptions = {}
 ): Promise<BlazeServerInstance> {
+  const config = loadAppConfig();
+  const listenPort = port ?? config.port;
   const ctx = createBlazeContext(options);
-  const server = createServer(async (req, res) => {
-    try {
-      await handleRequest(req, res, ctx);
-    } catch (err: any) {
-      if (!res.headersSent) {
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(
-          JSON.stringify({
-            error: {
-              code: 'INTERNAL_SERVER_ERROR',
-              message: err?.message ?? 'An unexpected server error occurred',
-            },
-          })
-        );
-      }
-    }
-  });
+  const server = createHttpServer(ctx);
 
   await new Promise<void>((resolve, reject) => {
-    server.listen(port, () => resolve());
+    server.listen(listenPort, () => resolve());
     server.once('error', reject);
   });
 
   const boundAddress = server.address();
   const actualPort =
-    typeof boundAddress === 'object' && boundAddress !== null
-      ? boundAddress.port
-      : port;
+    typeof boundAddress === 'object' && boundAddress !== null ? boundAddress.port : listenPort;
 
   const close = () =>
     new Promise<void>((resolve, reject) => {
@@ -89,30 +120,32 @@ export async function startServer(
   };
 }
 
-// Standalone execution check
 const isMain =
   process.argv[1] &&
-  fileURLToPath(import.meta.url).replace(/\\/g, '/') ===
-    process.argv[1].replace(/\\/g, '/');
+  fileURLToPath(import.meta.url).replace(/\\/g, '/') === process.argv[1].replace(/\\/g, '/');
 
 if (isMain || process.env.START_SERVER === 'true') {
-  const port = Number(process.env.PORT) || 3000;
-  startServer(port).then((instance) => {
-    console.log(`BLAZE Forge HTTP Backend running on http://localhost:${instance.port}`);
-    console.log(`- Health Check: http://localhost:${instance.port}/api/health`);
-    console.log(`- TokenHunt Registry: http://localhost:${instance.port}/api/registry`);
-    console.log(`- Baton Status: http://localhost:${instance.port}/api/baton`);
+  const config = loadAppConfig();
+  startServer(config.port)
+    .then((instance) => {
+      console.log(
+        `cindr HTTP Backend running on http://localhost:${instance.port} [${config.bchNetwork}]`
+      );
+      console.log(`- Landing Page: http://localhost:${instance.port}/`);
+      console.log(`- Forge Workspace: http://localhost:${instance.port}/dashboard`);
+      console.log(`- Health Check: http://localhost:${instance.port}/api/health`);
 
-    const shutdown = async () => {
-      console.log('Shutting down server...');
-      await instance.close();
-      process.exit(0);
-    };
+      const shutdown = async () => {
+        console.log('Shutting down server...');
+        await instance.close();
+        process.exit(0);
+      };
 
-    process.on('SIGINT', shutdown);
-    process.on('SIGTERM', shutdown);
-  }).catch((err) => {
-    console.error('Failed to start BLAZE Forge server:', err);
-    process.exit(1);
-  });
+      process.on('SIGINT', shutdown);
+      process.on('SIGTERM', shutdown);
+    })
+    .catch((err) => {
+      console.error('Failed to start cindr server:', err);
+      process.exit(1);
+    });
 }

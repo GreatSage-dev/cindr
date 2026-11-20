@@ -14,6 +14,7 @@ import type { WcTransactionObject } from 'cashscript/dist/walletconnect-utils.js
 import {
   binToHex,
   cashAddressToLockingBytecode,
+  decodeCashAddress,
   encodeCashAddress,
   encodeTransaction,
   hash160,
@@ -41,7 +42,7 @@ export interface WalletTokenUtxoLike {
   value?: bigint | number | string;
   lockingBytecode?: string;
   address?: string;
-  path?: string;
+  path?: string | null;
   token?: TokenDetails;
   category?: string;
   amount?: bigint | number | string;
@@ -108,6 +109,18 @@ export interface BuiltClaimTx {
   spentBatonOutpoint: string;
   nextBatonUtxo: SpendableUtxo;
   expectedStampOutpoints: number[];
+  estimatedFeeSats: bigint;
+}
+
+export class ForgeValidationError extends Error {
+  readonly statusCode = 422;
+  readonly code: string;
+
+  constructor(code: string, message: string) {
+    super(message);
+    this.name = 'ForgeValidationError';
+    this.code = code;
+  }
 }
 
 export type AdversarialAttackKind =
@@ -179,7 +192,11 @@ export class BatonMempoolTracker {
       );
     }
 
-    return { utxo: matching[0], zeroConfChained: Boolean(this.pending.size > 0) };
+    return { utxo: matching[0], zeroConfChained: false };
+  }
+
+  pendingCount(): number {
+    return this.pending.size;
   }
 
   clear(): void {
@@ -199,6 +216,33 @@ export function addressToLockingBytecode(cashAddress: string): Uint8Array {
     throw new Error(`Invalid CashAddress "${cashAddress}": ${decoded}`);
   }
   return decoded.bytecode;
+}
+
+/**
+ * Converts any valid CashAddress (p2pkh `q...`, p2pkhWithTokens `z...`, p2sh, or p2shWithTokens,
+ * with either `bitcoincash:` or `bchtest:` prefix) into a token-capable CashAddress (`z...` / `r...`)
+ * matching the target network prefix required by CashScript's TransactionBuilder.
+ */
+export function toTokenAwareNetworkAddress(
+  cashAddress: string,
+  targetPrefix?: 'bitcoincash' | 'bchtest'
+): string {
+  const decoded = decodeCashAddress(cashAddress.trim());
+  if (typeof decoded === 'string') {
+    throw new Error(`Invalid CashAddress "${cashAddress}": ${decoded}`);
+  }
+  const prefix =
+    targetPrefix ??
+    (decoded.prefix === 'bitcoincash' ? 'bitcoincash' : 'bchtest');
+  const tokenType =
+    decoded.type === 'p2sh' || decoded.type === 'p2shWithTokens'
+      ? 'p2shWithTokens'
+      : 'p2pkhWithTokens';
+  return encodeCashAddress({
+    prefix,
+    type: tokenType,
+    payload: decoded.payload,
+  }).address;
 }
 
 export function normalizeWalletUtxo(raw: WalletTokenUtxoLike): SpendableUtxo & { path: string | null } {
@@ -316,6 +360,7 @@ function finalizeBuiltBatonTx(params: {
   batonKeepSats: bigint;
   includeUnconfirmed: boolean;
   tracker: BatonMempoolTracker;
+  recordInTracker?: boolean;
 }) {
   const wcTransaction = params.builder.generateWcTransactionObject({
     broadcast: true,
@@ -335,7 +380,7 @@ function finalizeBuiltBatonTx(params: {
     params.batonCategory,
     params.batonKeepSats
   );
-  if (params.includeUnconfirmed) {
+  if (params.includeUnconfirmed && params.recordInTracker !== false) {
     params.tracker.record(
       params.contractTokenAddress,
       outpointKey(params.batonUtxo),
@@ -404,8 +449,12 @@ export async function buildClaimDemoStampsTx(
     throw new Error('At least one pure-BCH UTXO is required to fund the 5 Demo Stamp outputs + fee.');
   }
 
-  const recipientLock = addressToLockingBytecode(options.recipientAddress);
-  const userUnlocker = unlockerForUser(options.signer, options.recipientAddress);
+  const targetPrefix = dispenser.tokenAddress.startsWith('bitcoincash:')
+    ? 'bitcoincash'
+    : 'bchtest';
+  const recipientTokenAddr = toTokenAwareNetworkAddress(options.recipientAddress, targetPrefix);
+  const recipientLock = addressToLockingBytecode(recipientTokenAddr);
+  const userUnlocker = unlockerForUser(options.signer, recipientTokenAddr);
   const batonKeepSats = batonUtxo.satoshis >= DUST_SATOSHIS ? batonUtxo.satoshis : DUST_SATOSHIS;
 
   const builder = new TransactionBuilder({ provider: options.provider });
@@ -432,7 +481,7 @@ export async function buildClaimDemoStampsTx(
   for (let i = 1; i <= 5; i++) {
     expectedStampOutpoints.push(i);
     builder.addOutput({
-      to: options.recipientAddress,
+      to: recipientTokenAddr,
       amount: DUST_SATOSHIS,
       token: {
         category: options.demoCategory.toLowerCase(),
@@ -443,11 +492,11 @@ export async function buildClaimDemoStampsTx(
   }
 
   builder.addBchChangeOutputIfNeeded({
-    to: options.recipientAddress,
+    to: recipientTokenAddr,
     feeRate: options.feeRate ?? 1.5,
   });
 
-  const { wcTransaction, txHex, nextBatonUtxo } = finalizeBuiltBatonTx({
+  const { wcTransaction, txHex, feeSats, nextBatonUtxo } = finalizeBuiltBatonTx({
     builder,
     userPrompt: 'Claim 5 Demo Stamps (BCH 0-Conf)',
     contractTokenAddress: dispenser.tokenAddress,
@@ -468,6 +517,7 @@ export async function buildClaimDemoStampsTx(
     spentBatonOutpoint: outpointKey(batonUtxo),
     nextBatonUtxo,
     expectedStampOutpoints,
+    estimatedFeeSats: feeSats,
   };
 }
 
@@ -498,7 +548,8 @@ export async function buildForgeTx(
   const normalized = normalizeUtxoList(utxos);
   const matched = selectDistinctStampMatches(normalized, options.slots, tier);
   if (matched.length < tier) {
-    throw new Error(
+    throw new ForgeValidationError(
+      'INSUFFICIENT_STAMPS',
       `Need ${tier} distinct registered stamps to forge ${tierDef.name}; found only ${matched.length}.`
     );
   }
@@ -507,7 +558,11 @@ export async function buildForgeTx(
   const trophyCommitmentHex =
     tier.toString(16).padStart(2, '0') + binToHex(slotIndexBytes);
 
-  const userUnlocker = unlockerForUser(options.signer, options.recipientAddress);
+  const targetPrefix = forge.tokenAddress.startsWith('bitcoincash:')
+    ? 'bitcoincash'
+    : 'bchtest';
+  const recipientTokenAddr = toTokenAwareNetworkAddress(options.recipientAddress, targetPrefix);
+  const userUnlocker = unlockerForUser(options.signer, recipientTokenAddr);
   const batonKeepSats = batonUtxo.satoshis >= DUST_SATOSHIS ? batonUtxo.satoshis : DUST_SATOSHIS;
 
   const builder = new TransactionBuilder({
@@ -521,15 +576,19 @@ export async function buildForgeTx(
 
   // Inputs 1..tier: Distinct Stamp UTXOs in strictly ascending slot order
   let totalStampSats = 0n;
+  const usedInputOutpoints = new Set<string>();
   for (const { utxo } of matched) {
     builder.addInput(utxo, userUnlocker);
     inputPaths.push(utxo.path);
     totalStampSats += utxo.satoshis;
+    usedInputOutpoints.add(outpointKey(utxo));
   }
 
-  // Optional pure-BCH fee inputs if stamp dust isn't enough to cover Trophy dust + fee
-  const explicitFees = normalizeUtxoList(options.feeUtxos ?? []).filter((u) => !u.token);
-  const minNeededFromUser = DUST_SATOSHIS + 1200n;
+  // Optional pure-BCH fee inputs if stamp dust isn't enough to cover Trophy dust + loop tx fee
+  const explicitFees = normalizeUtxoList(options.feeUtxos ?? []).filter(
+    (u) => !u.token && !usedInputOutpoints.has(outpointKey(u))
+  );
+  const minNeededFromUser = DUST_SATOSHIS + 4500n;
   if (totalStampSats < minNeededFromUser) {
     for (const feeUtxo of explicitFees) {
       builder.addInput(feeUtxo, userUnlocker);
@@ -550,7 +609,7 @@ export async function buildForgeTx(
 
   // Output 1: Newly minted immutable Trophy NFT
   builder.addOutput({
-    to: options.recipientAddress,
+    to: recipientTokenAddr,
     amount: DUST_SATOSHIS,
     token: {
       category: options.forgeCategory.toLowerCase(),
@@ -561,7 +620,7 @@ export async function buildForgeTx(
 
   // Output 2: Pure-BCH change (zero tokens -> consensus-guaranteed burn of all stamps)
   builder.addBchChangeOutputIfNeeded({
-    to: options.recipientAddress,
+    to: recipientTokenAddr,
     feeRate: options.feeRate ?? 1.5,
   });
 
@@ -574,6 +633,7 @@ export async function buildForgeTx(
     batonKeepSats,
     includeUnconfirmed,
     tracker,
+    recordInTracker: Boolean(options.signer),
   });
 
   return {

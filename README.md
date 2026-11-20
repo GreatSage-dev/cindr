@@ -1,14 +1,14 @@
-# BLAZE Forge / StampForge
+# cindr
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/CashVM%20Tests-26%2F26%20passing-brightgreen.svg)](tests/api.test.ts)
+[![Tests](https://img.shields.io/badge/CashVM%20Tests-38%2F38%20passing-brightgreen.svg)](tests/api.test.ts)
 [![Zero-Conf Chaining](https://img.shields.io/badge/BCH%200--Conf-Active-orange.svg)](src/buildForgeTx.ts)
 
 **Burn 5, 9, or 10 distinct Bitcoin Cash CashTokens in one transaction to mint a verifiable Trophy NFT on-chain.**
 
 461 hackers registered for BCH BLAZE 2026 can collect TokenHunt badges, yet the organizers' own Forge button in `tokenhunt.js` still reads `"The trophy contract isn't connected yet."`
 
-**BLAZE Forge** ships the missing CashVM loop covenant (`contracts/BlazeForge.cash`), a 0-conf Demo Stamp dispenser (`contracts/StampDispenser.cash`), a drop-in `buildForgeTx(utxos, tier)` engine, and an HTTP REST backend service (`src/server.ts`) for wallets and web clients.
+**cindr** ships the missing CashVM loop covenant (`contracts/BlazeForge.cash`), a 0-conf Demo Stamp dispenser (`contracts/StampDispenser.cash`), a drop-in `buildForgeTx(utxos, tier)` engine, a Node HTTP API (`src/server.ts`), an interactive landing page (`/`), and a Forge workspace (`/dashboard`).
 
 ---
 
@@ -36,30 +36,40 @@
 
 ---
 
-## HTTP REST Endpoints
+## Web Surfaces & HTTP API
 
-The backend runs on port 3000 (`npm start`):
+Running `npm start` compiles TypeScript and serves both web views and the REST API on `PORT` (default `3000`, configured via `.env` — see `.env.example`):
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/api/health` | Covenant opcodes, bytecode sizes, and CashVM status |
+| `GET` | `/` | Studio overview with Three.js fiber-to-iris scene and live `/api/attack` verifier |
+| `GET` | `/dashboard` | Interactive Forge workspace (Sandbox & custom wallets, slot viewer, receipts, Proofs, Registry) |
+| `GET` | `/api/health` | Compiled covenant sizes (`redeemScriptBytes` & template bytes), opcodes, and CashVM status |
 | `GET` | `/api/registry` | 15 TokenHunt badge slots and 3 trophy tier rules |
 | `GET` | `/api/baton` | 0-Conf mempool tracker state for both covenants |
-| `POST` | `/api/stamps/claim` | Button #1: Dispenses 5 demo stamps in 1 transaction (0-conf) |
-| `POST` | `/api/forge` | Button #3: Burns stamps and mints trophy NFT (0-conf) |
-| `POST` | `/api/attack` | Button #2: Runs adversarial attack proving CashVM rejection |
+| `POST` | `/api/wallet/demo` | Creates an ephemeral local Sandbox wallet when `BCH_NETWORK=mock` |
+| `GET` | `/api/wallet?address=...` | Inspects held Stamp slots, forged Trophy NFTs, and eligible tiers |
+| `POST` | `/api/stamps/claim` | Dispenses 5 Demo Stamps in 1 transaction (0-conf) |
+| `POST` | `/api/forge` | Burns stamps and mints trophy NFT (or unsigned `wcTransaction` payload) |
+| `POST` | `/api/attack` | Runs live adversarial attack proving CashVM rejection |
 
-All mutation endpoints support the `Idempotency-Key` header with automatic duplicate replay and payload conflict guards.
+All mutation endpoints support route-scoped `Idempotency-Key` replay and payload-mismatch checks.
 
 ---
 
 ## Verification Commands
 
+See **[JUDGES.md](JUDGES.md)** for the 30-second verification walkthrough, drop-in `tokenhunt.js` integration, and protocol findings, and **[docs/kings-advicer-audit.md](docs/kings-advicer-audit.md)** for the contrastive hackathon audit.
+
 ```bash
 npm install
-npm run verify       # 26/26 deterministic CashVM + API tests (exit 0)
-npm run smoke        # Fast offline 0-conf claim -> forge -> attack sanity check
-npm run check:words  # Plain-English linter enforcing zero buzzwords
-npm run evidence     # Generates machine-verified evidence/report.json
-npm start            # Starts the HTTP API backend on port 3000
+npx tsc --noEmit       # Strict TypeScript type check
+npm run build          # Compiles TypeScript into dist/
+npm run verify         # 38/38 deterministic CashVM + HTTP API tests (exit 0)
+npm run smoke          # Fast offline 0-conf claim -> forge -> attack sanity check
+npm run check:words    # Plain-English linter enforcing zero buzzwords
+npm run sync:tokenhunt # Live TokenHunt category audit against bchblaze.cash
+npm run deploy:chipnet # Live BCH Chipnet pre-flight / genesis baton deployment
+npm run evidence       # Generates machine-verified evidence/report.json
+npm start              # Compiles and runs dist/src/server.js on port 3000
 ```

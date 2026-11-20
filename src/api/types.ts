@@ -18,12 +18,15 @@ export interface HealthContractInfo {
   name: string;
   bytecodeBytes: number;
   opcodesCount: number;
+  redeemScriptBytes: number;
+  redeemOpcodesCount: number;
   hasLaylaLoops: boolean;
   tokenAddress: string;
 }
 
 export interface HealthResponse {
   status: 'healthy' | 'degraded';
+  networkMode: string;
   networkTarget: string;
   contracts: {
     forge: HealthContractInfo;
@@ -102,8 +105,11 @@ export interface ForgeRequest {
 
 export interface ForgeResponse {
   success: boolean;
+  broadcasted: boolean;
   txid: string;
   txHex: string;
+  wcTransaction?: BuiltForgeTx['wcTransaction'];
+  inputPaths?: (string | null)[];
   trophy: {
     tier: 5 | 9 | 10;
     tierName: string;
@@ -137,4 +143,44 @@ export interface AttackResponse {
     executionTimeMs: number;
     adversarialRefusalVerified: boolean;
   };
+}
+
+export interface WalletDemoResponse {
+  address: string;
+  label: string;
+  mode: 'sandbox';
+  bchSatoshis: number;
+}
+
+export interface WalletStampItem {
+  slot: number;
+  id: string;
+  name: string;
+  kind: 'official' | 'demo' | 'merchant';
+  category: string;
+  commitment: string;
+  txid: string;
+  vout: number;
+  satoshis: number;
+}
+
+export interface WalletTrophyItem {
+  tier: number;
+  tierName: string;
+  category: string;
+  commitmentHex: string;
+  burnedSlots: number[];
+  txid: string;
+  vout: number;
+  satoshis: number;
+}
+
+export interface WalletOverviewResponse {
+  address: string;
+  mode: 'sandbox' | 'external';
+  bchSatoshis: number;
+  utxoCount: number;
+  stamps: WalletStampItem[];
+  trophies: WalletTrophyItem[];
+  eligibleTiers: (5 | 9 | 10)[];
 }

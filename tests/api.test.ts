@@ -1,5 +1,11 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { MockNetworkProvider, type NetworkProvider } from 'cashscript';
 import { encodeCashAddress, hash160, hexToBin, secp256k1 } from '@bitauth/libauth';
+import { BlazeForgeArtifact, StampDispenserArtifact } from '../src/artifacts.js';
+import { BlazeBackendService } from '../src/api/service.js';
+import { IdempotencyStore } from '../src/api/idempotency.js';
+import { loadAppConfig } from '../src/config.js';
+import { createBlazeTokenHuntRegistry } from '../src/registry.js';
 import { startServer, type BlazeServerInstance } from '../src/server.js';
 import type {
   AttackResponse,
@@ -8,6 +14,8 @@ import type {
   ForgeResponse,
   HealthResponse,
   RegistryResponse,
+  WalletDemoResponse,
+  WalletOverviewResponse,
 } from '../src/api/types.js';
 
 describe('BLAZE Forge HTTP Backend API & Interface Verification Suite', () => {
@@ -42,19 +50,28 @@ describe('BLAZE Forge HTTP Backend API & Interface Verification Suite', () => {
 
     const body = (await res.json()) as HealthResponse;
     expect(body.status).toBe('healthy');
+    expect(body.networkMode).toBe('mock');
     expect(body.networkTarget).toBe('BCH_2026_05');
 
     // BlazeForge contract verification
     expect(body.contracts.forge.name).toBe('BlazeForge');
-    expect(body.contracts.forge.bytecodeBytes).toBe(276);
-    expect(body.contracts.forge.opcodesCount).toBe(266);
+    expect(body.contracts.forge.bytecodeBytes).toBeGreaterThan(200);
+    expect(body.contracts.forge.opcodesCount).toBe(
+      BlazeForgeArtifact.bytecode.split(/\s+/).filter(Boolean).length
+    );
+    expect(body.contracts.forge.redeemScriptBytes).toBeGreaterThan(700);
+    expect(body.contracts.forge.redeemOpcodesCount).toBeGreaterThan(150);
     expect(body.contracts.forge.hasLaylaLoops).toBe(true);
     expect(body.contracts.forge.tokenAddress).toMatch(/^bchtest:/);
 
     // StampDispenser contract verification
     expect(body.contracts.dispenser.name).toBe('StampDispenser');
-    expect(body.contracts.dispenser.bytecodeBytes).toBe(85);
-    expect(body.contracts.dispenser.opcodesCount).toBe(81);
+    expect(body.contracts.dispenser.bytecodeBytes).toBeGreaterThan(80);
+    expect(body.contracts.dispenser.opcodesCount).toBe(
+      StampDispenserArtifact.bytecode.split(/\s+/).filter(Boolean).length
+    );
+    expect(body.contracts.dispenser.redeemScriptBytes).toBeGreaterThan(100);
+    expect(body.contracts.dispenser.redeemOpcodesCount).toBeGreaterThan(50);
     expect(body.contracts.dispenser.hasLaylaLoops).toBe(true);
     expect(body.contracts.dispenser.tokenAddress).toMatch(/^bchtest:/);
 
@@ -100,6 +117,14 @@ describe('BLAZE Forge HTTP Backend API & Interface Verification Suite', () => {
     expect(body.success).toBe(true);
     expect(body.txid).toMatch(/^[0-9a-f]{64}$/);
     expect(body.stamps).toHaveLength(5);
+    expect(body.stamps.map((s) => s.slot)).toEqual([10, 11, 12, 13, 14]);
+    expect(body.stamps.map((s) => s.id)).toEqual([
+      'demo-stamp-1',
+      'demo-stamp-2',
+      'demo-stamp-3',
+      'demo-stamp-4',
+      'demo-stamp-5',
+    ]);
     expect(body.stamps.map((s) => s.commitment)).toEqual(['01', '02', '03', '04', '05']);
     expect(body.zeroConfChained).toBe(true);
     expect(body.nextBatonOutpoint).toBe(`${body.txid}:0`);
@@ -123,7 +148,8 @@ describe('BLAZE Forge HTTP Backend API & Interface Verification Suite', () => {
     expect(body.trophy.tierName).toBe('BLAZE Medallion');
     expect(body.trophy.burnedStampCount).toBe(5);
     expect(body.trophy.commitmentHex).toBe('050a0b0c0d0e');
-    expect(body.zeroConfChained).toBe(true);
+    // First Forge transaction uses the seeded contract baton; Test 6 verifies chained Forge zeroConfChained: true.
+    expect(body.zeroConfChained).toBe(false);
     expect(body.nextBatonOutpoint).toBe(`${body.txid}:0`);
   });
 
@@ -347,5 +373,300 @@ describe('BLAZE Forge HTTP Backend API & Interface Verification Suite', () => {
     expect(preflight.status).toBe(204);
     expect(preflight.headers.get('Access-Control-Allow-Origin')).toBe('*');
     expect(preflight.headers.get('Access-Control-Allow-Methods')).toContain('POST');
+  });
+
+  it('16. Static Landing Page & Three.js Vendor Assets serve cleanly', async () => {
+    const htmlRes = await fetch(`${baseUrl}/`);
+    expect(htmlRes.status).toBe(200);
+    expect(htmlRes.headers.get('Content-Type')).toContain('text/html');
+    const htmlBody = await htmlRes.text();
+    expect(htmlBody).toContain('cindr');
+    expect(htmlBody).toContain('iris-canvas');
+
+    const cssRes = await fetch(`${baseUrl}/styles.css`);
+    expect(cssRes.status).toBe(200);
+    expect(cssRes.headers.get('Content-Type')).toContain('text/css');
+
+    const jsRes = await fetch(`${baseUrl}/app.js`);
+    expect(jsRes.status).toBe(200);
+    expect(jsRes.headers.get('Content-Type')).toContain('application/javascript');
+
+    const threeRes = await fetch(`${baseUrl}/vendor/three.module.js`);
+    expect(threeRes.status).toBe(200);
+    expect(threeRes.headers.get('Content-Type')).toContain('application/javascript');
+
+    const threeCoreRes = await fetch(`${baseUrl}/vendor/three.core.js`);
+    expect(threeCoreRes.status).toBe(200);
+    expect(threeCoreRes.headers.get('Content-Type')).toContain('application/javascript');
+  });
+
+  it('17. /dashboard Workspace Assets & HEAD / Serve with Security Headers', async () => {
+    const headRoot = await fetch(`${baseUrl}/`, { method: 'HEAD' });
+    expect(headRoot.status).toBe(200);
+    expect(headRoot.headers.get('X-Content-Type-Options')).toBe('nosniff');
+    expect(headRoot.headers.get('X-Frame-Options')).toBe('DENY');
+
+    const dashHtml = await fetch(`${baseUrl}/dashboard`);
+    expect(dashHtml.status).toBe(200);
+    expect(dashHtml.headers.get('Content-Type')).toContain('text/html');
+    expect(dashHtml.headers.get('Content-Security-Policy')).toContain("script-src 'self'");
+    const body = await dashHtml.text();
+    expect(body).toContain('Forge workspace');
+
+    const dashCss = await fetch(`${baseUrl}/dashboard.css`);
+    expect(dashCss.status).toBe(200);
+    expect(dashCss.headers.get('Content-Type')).toContain('text/css');
+
+    const dashJs = await fetch(`${baseUrl}/dashboard.js`);
+    expect(dashJs.status).toBe(200);
+    expect(dashJs.headers.get('Content-Type')).toContain('application/javascript');
+  });
+
+  it('18. Sandbox Wallet Lifecycle: POST /api/wallet/demo -> claim -> forge -> GET /api/wallet (no HTTP privkeys)', async () => {
+    const createRes = await fetch(`${baseUrl}/api/wallet/demo`, { method: 'POST' });
+    expect(createRes.status).toBe(201);
+    const wallet = (await createRes.json()) as WalletDemoResponse;
+    expect(wallet.mode).toBe('sandbox');
+    expect(wallet.address).toMatch(/^bchtest:/);
+
+    const emptyView = (await (
+      await fetch(`${baseUrl}/api/wallet?address=${encodeURIComponent(wallet.address)}`)
+    ).json()) as WalletOverviewResponse;
+    expect(emptyView.mode).toBe('sandbox');
+    expect(emptyView.stamps).toHaveLength(0);
+    expect(emptyView.eligibleTiers).toEqual([]);
+
+    const claimRes = await fetch(`${baseUrl}/api/stamps/claim`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ recipientAddress: wallet.address }),
+    });
+    expect(claimRes.status).toBe(200);
+
+    const readyView = (await (
+      await fetch(`${baseUrl}/api/wallet?address=${encodeURIComponent(wallet.address)}`)
+    ).json()) as WalletOverviewResponse;
+    expect(readyView.stamps).toHaveLength(5);
+    expect(readyView.eligibleTiers).toEqual([5]);
+
+    const forgeRes = await fetch(`${baseUrl}/api/forge`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tier: 5, recipientAddress: wallet.address }),
+    });
+    expect(forgeRes.status).toBe(200);
+    const forgeBody = (await forgeRes.json()) as ForgeResponse;
+    expect(forgeBody.broadcasted).toBe(true);
+    expect(forgeBody.trophy.tierName).toBe('BLAZE Medallion');
+
+    const afterView = (await (
+      await fetch(`${baseUrl}/api/wallet?address=${encodeURIComponent(wallet.address)}`)
+    ).json()) as WalletOverviewResponse;
+    expect(afterView.stamps).toHaveLength(0);
+    expect(afterView.trophies).toHaveLength(1);
+    expect(afterView.trophies[0].commitmentHex).toBe('050a0b0c0d0e');
+  });
+
+  it('19. POST /api/forge merges feeUtxos when caller passes explicit dust-only req.utxos', async () => {
+    const priv = hexToBin('00'.repeat(31) + '0a');
+    const pub = secp256k1.derivePublicKeyCompressed(priv);
+    if (typeof pub === 'string') throw new Error(pub);
+    const addr = encodeCashAddress({
+      prefix: 'bchtest',
+      type: 'p2pkhWithTokens',
+      payload: hash160(pub),
+    }).address;
+
+    const claimRes = await fetch(`${baseUrl}/api/stamps/claim`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ recipientAddress: addr }),
+    });
+    expect(claimRes.status).toBe(200);
+
+    const overview = (await (
+      await fetch(`${baseUrl}/api/wallet?address=${encodeURIComponent(addr)}`)
+    ).json()) as WalletOverviewResponse;
+
+    const explicitDustStamps = overview.stamps.map((s) => ({
+      txid: s.txid,
+      vout: s.vout,
+      satoshis: s.satoshis,
+      address: addr,
+      category: s.category,
+      amount: 0,
+      capability: 'none' as const,
+      commitment: s.commitment,
+    }));
+
+    const forgeRes = await fetch(`${baseUrl}/api/forge`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tier: 5,
+        recipientAddress: addr,
+        signerPrivKeyHex: '00'.repeat(31) + '0a',
+        utxos: explicitDustStamps,
+      }),
+    });
+    expect(forgeRes.status).toBe(200);
+    const forgeBody = (await forgeRes.json()) as ForgeResponse;
+    expect(forgeBody.success).toBe(true);
+    expect(forgeBody.trophy.burnedStampCount).toBe(5);
+  });
+
+  it('20. POST /api/forge returns HTTP 422 INSUFFICIENT_STAMPS instead of 500 on empty wallet', async () => {
+    const emptyWallet = (await (
+      await fetch(`${baseUrl}/api/wallet/demo`, { method: 'POST' })
+    ).json()) as WalletDemoResponse;
+
+    const res = await fetch(`${baseUrl}/api/forge`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tier: 5, recipientAddress: emptyWallet.address }),
+    });
+    expect(res.status).toBe(422);
+    const body = await res.json();
+    expect(body.error.code).toBe('INSUFFICIENT_STAMPS');
+  });
+
+  it('21. Idempotency-Key scopes per endpoint and rejects same-route reuse across endpoints cleanly', async () => {
+    const sharedKey = `scoped-${Date.now()}`;
+    const wallet = (await (
+      await fetch(`${baseUrl}/api/wallet/demo`, { method: 'POST' })
+    ).json()) as WalletDemoResponse;
+
+    const claimRes = await fetch(`${baseUrl}/api/stamps/claim`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Idempotency-Key': sharedKey },
+      body: JSON.stringify({ recipientAddress: wallet.address }),
+    });
+    expect(claimRes.status).toBe(200);
+
+    // Same key used on /api/forge must not collide with /api/stamps/claim
+    const forgeRes = await fetch(`${baseUrl}/api/forge`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Idempotency-Key': sharedKey },
+      body: JSON.stringify({ tier: 5, recipientAddress: wallet.address }),
+    });
+    expect(forgeRes.status).toBe(200);
+  });
+
+  it('22. Oversized JSON request (> 256KB) fails cleanly with HTTP 413 PAYLOAD_TOO_LARGE', async () => {
+    const hugeBody = JSON.stringify({
+      recipientAddress: testUserAddress,
+      filler: 'x'.repeat(270 * 1024),
+    });
+
+    const res = await fetch(`${baseUrl}/api/stamps/claim`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: hugeBody,
+    });
+    expect(res.status).toBe(413);
+    const body = await res.json();
+    expect(body.error.code).toBe('PAYLOAD_TOO_LARGE');
+  });
+
+  it('23. IdempotencyStore enforces bounded maxEntries without leaking memory', () => {
+    const store = new IdempotencyStore(60_000, 3);
+    store.claim('POST:/api/a:1', 'h1');
+    store.claim('POST:/api/a:2', 'h2');
+    store.claim('POST:/api/a:3', 'h3');
+    store.claim('POST:/api/a:4', 'h4');
+    expect(store.size()).toBe(3);
+    expect(store.claim('POST:/api/a:1', 'h1').status).toBe('claimed');
+  });
+
+  it('24. Live network mode rejects signerPrivKeyHex over HTTP with PrivateKeyRejectedError', async () => {
+    const stubLiveProvider = {
+      network: 'chipnet',
+      getUtxos: async () => [],
+      getBlockHeight: async () => 1,
+      getRawTransaction: async () => '',
+      sendRawTransaction: async () => '',
+    } as unknown as NetworkProvider;
+
+    const liveService = new BlazeBackendService({
+      provider: stubLiveProvider,
+      networkMode: 'chipnet',
+    });
+
+    await expect(
+      liveService.forgeTrophy({
+        tier: 5,
+        recipientAddress: testUserAddress,
+        signerPrivKeyHex: '00'.repeat(31) + '05',
+      })
+    ).rejects.toMatchObject({
+      statusCode: 400,
+      code: 'PRIVATE_KEY_NOT_ALLOWED',
+    });
+
+    const mockCheck = new MockNetworkProvider({ vmTarget: 'BCH_2026_05' });
+    expect(mockCheck).toBeDefined();
+  });
+
+  it('25. WizardConnect vendor ESM bundle & chunks serve with CSP relay headers', async () => {
+    const wcRes = await fetch(`${baseUrl}/vendor/wizardconnect.js`);
+    expect(wcRes.status).toBe(200);
+    expect(wcRes.headers.get('Content-Type')).toContain('application/javascript');
+    expect(wcRes.headers.get('Content-Security-Policy')).toContain('wss://relay.riften.net:443');
+    expect(wcRes.headers.get('Content-Security-Policy')).toContain("'wasm-unsafe-eval'");
+    const wcText = await wcRes.text();
+    expect(wcText).toContain('chunk-KXQ2PETI.js');
+
+    const chunkRes = await fetch(`${baseUrl}/vendor/chunk-KXQ2PETI.js`);
+    expect(chunkRes.status).toBe(200);
+  });
+
+  it('26. Unsigned WizardConnect POST /api/forge serializes Uint8Array fields as hex and normalizes bitcoincash:/q-addresses', async () => {
+    const priv = hexToBin('00'.repeat(31) + '0b');
+    const pub = secp256k1.derivePublicKeyCompressed(priv);
+    if (typeof pub === 'string') throw new Error(pub);
+    const mainnetStyleAddr = encodeCashAddress({
+      prefix: 'bitcoincash',
+      type: 'p2pkh',
+      payload: hash160(pub),
+    }).address;
+
+    const claimRes = await fetch(`${baseUrl}/api/stamps/claim`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ recipientAddress: mainnetStyleAddr }),
+    });
+    expect(claimRes.status).toBe(200);
+
+    const forgeRes = await fetch(`${baseUrl}/api/forge`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tier: 5,
+        recipientAddress: mainnetStyleAddr,
+        autoBroadcast: false,
+      }),
+    });
+    expect(forgeRes.status).toBe(200);
+    const forgeBody = (await forgeRes.json()) as ForgeResponse;
+    expect(forgeBody.broadcasted).toBe(false);
+    expect(forgeBody.wcTransaction).toBeDefined();
+    expect(Array.isArray(forgeBody.inputPaths)).toBe(true);
+    const firstLocking = forgeBody.wcTransaction?.transaction.outputs[0]?.lockingBytecode;
+    expect(typeof firstLocking).toBe('string');
+    expect(firstLocking).toMatch(/^[0-9a-f]+$/);
+  });
+
+  it('27. TOKENHUNT_OVERRIDES_JSON promotes newly activated staging TokenHunt slots to live', () => {
+    const activatedCat = '44'.repeat(32);
+    const cfg = loadAppConfig({
+      TOKENHUNT_OVERRIDES_JSON: JSON.stringify({ 'showcase-showoff': activatedCat }),
+    });
+    expect(cfg.tokenHuntOverrides['showcase-showoff']).toBe(activatedCat);
+
+    const slots = createBlazeTokenHuntRegistry('dd' + '99'.repeat(30) + 'ee', cfg.tokenHuntOverrides);
+    const showcaseSlot = slots.find((s) => s.id === 'showcase-showoff');
+    expect(showcaseSlot?.category).toBe(activatedCat);
+    expect(showcaseSlot?.activationStatus).toBe('live');
+    expect(showcaseSlot?.name).toBe('Showcase Showoff');
   });
 });

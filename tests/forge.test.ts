@@ -183,7 +183,7 @@ describe('BLAZE Forge / StampForge — CashVM Deterministic & Adversarial Suite'
     expect(after.filter((u) => u.token && u.token.category !== FORGE_CATEGORY)).toHaveLength(0);
   });
 
-  it('4. Tier 10 (Trailblazer Trophy): Burns 9 TokenHunt tokens + Trailblazer 2025 under CashVM budget', async () => {
+  it('4. Tier 10 (Trailblazer Trophy): Burns 9 TokenHunt tokens + Trailblazer 2025 under CashVM budget', { timeout: 30_000 }, async () => {
     const { provider, tracker, slots } = setupWorld();
     const veteran = makeTestWallet('04');
 

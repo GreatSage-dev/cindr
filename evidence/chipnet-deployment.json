@@ -1,0 +1,28 @@
+{
+  "status": "awaiting_faucet_funding",
+  "checkedAt": "2026-11-19T21:06:42.521Z",
+  "network": "chipnet",
+  "chipnetBlockHeight": 338966,
+  "deployer": {
+    "cashAddress": "bchtest:qpxk7hkhr5l0zsv8sakdgauqhmc8sts3g5yxp4hvrj",
+    "tokenAddress": "bchtest:zpxk7hkhr5l0zsv8sakdgauqhmc8sts3g5rvjte2up",
+    "currentBalanceSats": 0,
+    "minimumRequiredSats": 12000,
+    "keyStoredLocallyIn": ".chipnet-deployer.json"
+  },
+  "compiledContracts": {
+    "blazeForge": {
+      "redeemScriptBytes": 815,
+      "redeemOpcodesCount": 203
+    },
+    "stampDispenser": {
+      "redeemScriptBytes": 125,
+      "redeemOpcodesCount": 60
+    }
+  },
+  "faucets": [
+    "https://tbch.googol.cash/",
+    "https://chipnet.bch.ninja/"
+  ],
+  "nextStepCommand": "npm run deploy:chipnet"
+}

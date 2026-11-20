@@ -1,86 +1,40 @@
 {
   "contractName": "StampDispenser",
   "constructorInputs": [
-    {
-      "name": "demoCategory",
-      "type": "bytes32"
-    }
+    { "name": "demoCategory", "type": "bytes32" }
   ],
   "abi": [
     {
       "name": "claim5",
       "inputs": [
-        {
-          "name": "recipientLockingBytecode",
-          "type": "bytes"
-        }
+        { "name": "recipientLockingBytecode", "type": "bytes" }
       ]
     }
   ],
-  "bytecode": "OP_0 OP_UTXOTOKENCATEGORY OP_OVER OP_2 OP_CAT OP_EQUALVERIFY OP_0 OP_OUTPUTBYTECODE OP_0 OP_UTXOBYTECODE OP_EQUALVERIFY OP_0 OP_OUTPUTTOKENCATEGORY OP_OVER OP_2 OP_CAT OP_EQUALVERIFY OP_0 OP_OUTPUTTOKENAMOUNT OP_0 OP_NUMEQUALVERIFY OP_0 OP_OUTPUTVALUE e803 OP_GREATERTHANOREQUAL OP_VERIFY OP_0 OP_OUTPUTVALUE OP_0 OP_UTXOVALUE OP_GREATERTHANOREQUAL OP_VERIFY OP_1 OP_BEGIN OP_DUP OP_OUTPUTBYTECODE OP_3 OP_PICK OP_EQUALVERIFY OP_DUP OP_OUTPUTTOKENCATEGORY OP_2 OP_PICK OP_EQUALVERIFY OP_DUP OP_OUTPUTTOKENAMOUNT OP_0 OP_NUMEQUALVERIFY OP_DUP OP_OUTPUTTOKENCOMMITMENT OP_OVER OP_1 OP_NUM2BIN OP_EQUALVERIFY OP_DUP OP_OUTPUTVALUE e803 OP_GREATERTHANOREQUAL OP_VERIFY OP_1ADD OP_DUP OP_5 OP_GREATERTHAN OP_UNTIL OP_6 OP_NUMEQUALVERIFY OP_TXOUTPUTCOUNT OP_7 OP_LESSTHANOREQUAL OP_VERIFY OP_TXOUTPUTCOUNT OP_7 OP_NUMEQUAL OP_IF OP_6 OP_OUTPUTTOKENCATEGORY OP_0 OP_EQUALVERIFY OP_ENDIF OP_2DROP OP_1",
-  "source": "pragma cashscript ^0.14.0;\n\n// StampDispenser: 0-Conf Demo Stamp Faucet Covenant\n//\n// Lets any judge with an empty wallet mint 5 distinct Demo Stamp NFTs (commitments 0x01..0x05)\n// in one 0-conf transaction so they can immediately test BlazeForge on BCH Mainnet or Chipnet.\ncontract StampDispenser(bytes32 demoCategory) {\n    function claim5(bytes recipientLockingBytecode) {\n        // Preserve the Dispenser Minting Baton NFT at Output 0 for instant 0-conf chaining\n        require(tx.inputs[0].tokenCategory == demoCategory + 0x02);\n        require(tx.outputs[0].lockingBytecode == tx.inputs[0].lockingBytecode);\n        require(tx.outputs[0].tokenCategory == demoCategory + 0x02);\n        require(tx.outputs[0].tokenAmount == 0);\n        require(tx.outputs[0].value >= 1000);\n        require(tx.outputs[0].value >= tx.inputs[0].value);\n\n        // Mint 5 distinct immutable Demo Stamp NFTs (commitments 0x01..0x05) via Layla loop\n        int i = 1;\n        do {\n            require(tx.outputs[i].lockingBytecode == recipientLockingBytecode);\n            require(tx.outputs[i].tokenCategory == demoCategory);\n            require(tx.outputs[i].tokenAmount == 0);\n            require(tx.outputs[i].nftCommitment == toPaddedBytes(i, 1));\n            require(tx.outputs[i].value >= 1000);\n            i = i + 1;\n        } while (i <= 5);\n\n        require(i == 6);\n\n        // Allow optional pure-BCH fee change at Output 6 with zero extra tokens\n        require(tx.outputs.length <= 7);\n        if (tx.outputs.length == 7) {\n            require(tx.outputs[6].tokenCategory == 0x);\n        }\n    }\n}\n",
-  "fingerprint": "9fb84e3bd097fe5b4f021344b88faef8adc2beb16ca1f89aadb6357344130013",
+  "bytecode": "OP_INPUTINDEX OP_0 OP_NUMEQUALVERIFY OP_0 OP_UTXOTOKENCATEGORY OP_OVER OP_2 OP_CAT OP_EQUALVERIFY OP_0 OP_OUTPUTBYTECODE OP_0 OP_UTXOBYTECODE OP_EQUALVERIFY OP_0 OP_OUTPUTTOKENCATEGORY OP_OVER OP_2 OP_CAT OP_EQUALVERIFY OP_0 OP_OUTPUTTOKENAMOUNT OP_0 OP_NUMEQUALVERIFY OP_0 OP_OUTPUTTOKENCOMMITMENT OP_0 OP_EQUALVERIFY OP_0 OP_OUTPUTVALUE e803 OP_GREATERTHANOREQUAL OP_VERIFY OP_0 OP_OUTPUTVALUE OP_0 OP_UTXOVALUE OP_GREATERTHANOREQUAL OP_VERIFY OP_1 OP_BEGIN OP_DUP OP_OUTPUTBYTECODE OP_3 OP_PICK OP_EQUALVERIFY OP_DUP OP_OUTPUTTOKENCATEGORY OP_2 OP_PICK OP_EQUALVERIFY OP_DUP OP_OUTPUTTOKENAMOUNT OP_0 OP_NUMEQUALVERIFY OP_DUP OP_OUTPUTTOKENCOMMITMENT OP_OVER OP_1 OP_NUM2BIN OP_EQUALVERIFY OP_DUP OP_OUTPUTVALUE e803 OP_GREATERTHANOREQUAL OP_VERIFY OP_1ADD OP_DUP OP_5 OP_GREATERTHAN OP_UNTIL OP_6 OP_NUMEQUALVERIFY OP_TXOUTPUTCOUNT OP_7 OP_LESSTHANOREQUAL OP_VERIFY OP_TXOUTPUTCOUNT OP_7 OP_NUMEQUAL OP_IF OP_6 OP_OUTPUTTOKENCATEGORY OP_0 OP_EQUALVERIFY OP_ENDIF OP_2DROP OP_1",
+  "source": "pragma cashscript ^0.14.0;\n\n// StampDispenser: 0-Conf Demo Stamp Faucet Covenant\n//\n// Lets any judge with an empty wallet mint 5 distinct Demo Stamp NFTs (commitments 0x01..0x05)\n// in one 0-conf transaction so they can immediately test BlazeForge on BCH Mainnet or Chipnet.\ncontract StampDispenser(bytes32 demoCategory) {\n    function claim5(bytes recipientLockingBytecode) {\n        // Preserve the Dispenser Minting Baton NFT at Output 0 for instant 0-conf chaining\n        require(this.activeInputIndex == 0);\n        require(tx.inputs[0].tokenCategory == demoCategory + 0x02);\n        require(tx.outputs[0].lockingBytecode == tx.inputs[0].lockingBytecode);\n        require(tx.outputs[0].tokenCategory == demoCategory + 0x02);\n        require(tx.outputs[0].tokenAmount == 0);\n        require(tx.outputs[0].nftCommitment == 0x);\n        require(tx.outputs[0].value >= 1000);\n        require(tx.outputs[0].value >= tx.inputs[0].value);\n\n        // Mint 5 distinct immutable Demo Stamp NFTs (commitments 0x01..0x05) via Layla loop\n        int i = 1;\n        do {\n            require(tx.outputs[i].lockingBytecode == recipientLockingBytecode);\n            require(tx.outputs[i].tokenCategory == demoCategory);\n            require(tx.outputs[i].tokenAmount == 0);\n            require(tx.outputs[i].nftCommitment == toPaddedBytes(i, 1));\n            require(tx.outputs[i].value >= 1000);\n            i = i + 1;\n        } while (i <= 5);\n\n        require(i == 6);\n\n        // Allow optional pure-BCH fee change at Output 6 with zero extra tokens\n        require(tx.outputs.length <= 7);\n        if (tx.outputs.length == 7) {\n            require(tx.outputs[6].tokenCategory == 0x);\n        }\n    }\n}\n",
+  "fingerprint": "5c0eddaeec3a97e637a1ede2dfa2de1e013e55a10311cb067106c3afc19c496d",
   "debug": {
-    "bytecode": "00ce78527e8800cd00c78800d178527e8800d3009d00cc02e803a26900cc00c6a269516576cd53798876d152798876d3009d76d27851808876cc02e803a2698b7655a066569dc457a169c4579c6356d10088686d51",
-    "sourceMap": "10:26:10:27;:16::42:1;:46::58:0;:61::65;:46:::1;:8::67;11:27:11:28:0;:16::45:1;:59::60:0;:49::77:1;:8::79;12:27:12:28:0;:16::43:1;:47::59:0;:62::66;:47:::1;:8::68;13:27:13:28:0;:16::41:1;:45::46:0;:8::48:1;14:27:14:28:0;:16::35:1;:39::43:0;:16:::1;:8::45;15:27:15:28:0;:16::35:1;:49::50:0;:39::57:1;:16;:8::59;18:16:18:17:0;19:8:26:25;20:31:20:32;:20::49:1;:53::77:0;;:12::79:1;21:31:21:32:0;:20::47:1;:51::63:0;;:12::65:1;22:31:22:32:0;:20::45:1;:49::50:0;:12::52:1;23:31:23:32:0;:20::47:1;:65::66:0;:68::69;:51::70:1;:12::72;24:31:24:32:0;:20::39:1;:43::47:0;:20:::1;:12::49;25::25:22;26:17:26:18:0;:22::23;19:8::25:1;;28:21:28:22:0;:8::24:1;31:16:31:33:0;:37::38;:16:::1;:8::40;32:12:32:29:0;:33::34;:12:::1;:36:34:9:0;33:31:33:32;:20::47:1;:51::53:0;:12::55:1;32:36:34:9;8:52:35:5;",
+    "bytecode": "c0009d00ce78527e8800cd00c78800d178527e8800d3009d00d2008800cc02e803a26900cc00c6a269516576cd53798876d152798876d3009d76d27851808876cc02e803a2698b7655a066569dc457a169c4579c6356d10088686d51",
+    "sourceMap": "10:16:10:37;:41::42;:8::44:1;11:26:11:27:0;:16::42:1;:46::58:0;:61::65;:46:::1;:8::67;12:27:12:28:0;:16::45:1;:59::60:0;:49::77:1;:8::79;13:27:13:28:0;:16::43:1;:47::59:0;:62::66;:47:::1;:8::68;14:27:14:28:0;:16::41:1;:45::46:0;:8::48:1;15:27:15:28:0;:16::43:1;:47::49:0;:8::51:1;16:27:16:28:0;:16::35:1;:39::43:0;:16:::1;:8::45;17:27:17:28:0;:16::35:1;:49::50:0;:39::57:1;:16;:8::59;20:16:20:17:0;21:8:28:25;22:31:22:32;:20::49:1;:53::77:0;;:12::79:1;23:31:23:32:0;:20::47:1;:51::63:0;;:12::65:1;24:31:24:32:0;:20::45:1;:49::50:0;:12::52:1;25:31:25:32:0;:20::47:1;:65::66:0;:68::69;:51::70:1;:12::72;26:31:26:32:0;:20::39:1;:43::47:0;:20:::1;:12::49;27::27:22;28:17:28:18:0;:22::23;21:8::25:1;;30:21:30:22:0;:8::24:1;33:16:33:33:0;:37::38;:16:::1;:8::40;34:12:34:29:0;:33::34;:12:::1;:36:36:9:0;35:31:35:32;:20::47:1;:51::53:0;:12::55:1;34:36:36:9;8:52:37:5;",
     "logs": [],
     "requires": [
-      {
-        "ip": 6,
-        "line": 10
-      },
-      {
-        "ip": 11,
-        "line": 11
-      },
-      {
-        "ip": 17,
-        "line": 12
-      },
-      {
-        "ip": 21,
-        "line": 13
-      },
-      {
-        "ip": 26,
-        "line": 14
-      },
-      {
-        "ip": 32,
-        "line": 15
-      },
-      {
-        "ip": 39,
-        "line": 20
-      },
-      {
-        "ip": 44,
-        "line": 21
-      },
-      {
-        "ip": 48,
-        "line": 22
-      },
-      {
-        "ip": 54,
-        "line": 23
-      },
-      {
-        "ip": 59,
-        "line": 24
-      },
-      {
-        "ip": 66,
-        "line": 28
-      },
-      {
-        "ip": 70,
-        "line": 31
-      },
-      {
-        "ip": 78,
-        "line": 33
-      }
+      { "ip": 3, "line": 10 },
+      { "ip": 9, "line": 11 },
+      { "ip": 14, "line": 12 },
+      { "ip": 20, "line": 13 },
+      { "ip": 24, "line": 14 },
+      { "ip": 28, "line": 15 },
+      { "ip": 33, "line": 16 },
+      { "ip": 39, "line": 17 },
+      { "ip": 46, "line": 22 },
+      { "ip": 51, "line": 23 },
+      { "ip": 55, "line": 24 },
+      { "ip": 61, "line": 25 },
+      { "ip": 66, "line": 26 },
+      { "ip": 73, "line": 30 },
+      { "ip": 77, "line": 33 },
+      { "ip": 85, "line": 35 }
     ]
   },
   "compiler": {
@@ -91,5 +45,5 @@
       "enforceLocktimeGuard": true
     }
   },
-  "updatedAt": "2026-11-18T15:47:25.548Z"
+  "updatedAt": "2026-11-19T19:10:56.374Z"
 }

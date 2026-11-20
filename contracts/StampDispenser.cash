@@ -7,10 +7,12 @@ pragma cashscript ^0.14.0;
 contract StampDispenser(bytes32 demoCategory) {
     function claim5(bytes recipientLockingBytecode) {
         // Preserve the Dispenser Minting Baton NFT at Output 0 for instant 0-conf chaining
+        require(this.activeInputIndex == 0);
         require(tx.inputs[0].tokenCategory == demoCategory + 0x02);
         require(tx.outputs[0].lockingBytecode == tx.inputs[0].lockingBytecode);
         require(tx.outputs[0].tokenCategory == demoCategory + 0x02);
         require(tx.outputs[0].tokenAmount == 0);
+        require(tx.outputs[0].nftCommitment == 0x);
         require(tx.outputs[0].value >= 1000);
         require(tx.outputs[0].value >= tx.inputs[0].value);
 

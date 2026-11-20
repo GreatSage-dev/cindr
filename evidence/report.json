@@ -1,54 +1,54 @@
 {
-  "generatedAt": "2026-11-18T19:07:56.539Z",
+  "generatedAt": "2026-11-20T08:34:02.309Z",
   "vmTarget": "BCH_2026_05",
   "contracts": {
     "BlazeForge": {
       "addressType": "p2sh32",
-      "bytesize": 808,
-      "opcount": 199,
+      "bytesize": 815,
+      "opcount": 203,
       "usesLaylaLoops": true
     },
     "StampDispenser": {
       "addressType": "p2sh32",
-      "bytesize": 118,
-      "opcount": 56,
+      "bytesize": 125,
+      "opcount": 60,
       "usesLaylaLoops": true
     }
   },
   "runs": [
     {
       "action": "Button #1: StampDispenser.claim5 (5 Demo Stamps)",
-      "txid": "099c25af160f7ce5f5eed4a9a38069754c3efb254c7bf978457d19f8e37bd037",
-      "txBytes": 800,
-      "covenantOpCost": 22501,
-      "maxOpCost": 149600
+      "txid": "6dbf67ab30a9a05080c7fc4da403bfd2ab294ea43b6c674121c31aecebf877af",
+      "txBytes": 807,
+      "covenantOpCost": 23402,
+      "maxOpCost": 155200
     },
     {
       "action": "Button #3: BlazeForge.forge Tier 5 (0-Conf Chained Medallion)",
-      "txid": "4ba796812fb407c4ac476d9d427860b2df750534c5f1a29109299ce738525128",
-      "txBytes": 1763,
-      "feeSats": 2645,
-      "zeroConfChained": true,
-      "covenantOpCost": 103077,
-      "maxOpCost": 687200
+      "txid": "b7732acdc75f610fd4ab0cc6eb4e1acc69aea3a8d676f435fac019447804f8f9",
+      "txBytes": 1770,
+      "feeSats": 2655,
+      "zeroConfChained": false,
+      "covenantOpCost": 103786,
+      "maxOpCost": 692800
     },
     {
       "action": "BlazeForge.forge Tier 9 (BLAZE Trophy, 0-Conf Chained)",
-      "txid": "4a513576c1f5b4033c3ab5e4b41608ebac3a33fdfd179af8ab29f030ae8209cf",
-      "txBytes": 2335,
-      "feeSats": 3503,
+      "txid": "bac6d57175d048bffc1ad87d5fc70827724bb90f77a2003c0556b9efc68010df",
+      "txBytes": 2342,
+      "feeSats": 3513,
       "zeroConfChained": true,
-      "covenantOpCost": 174881,
-      "maxOpCost": 690400
+      "covenantOpCost": 175590,
+      "maxOpCost": 696000
     },
     {
       "action": "BlazeForge.forge Tier 10 (Trailblazer Trophy, 0-Conf Chained)",
-      "txid": "5c86419b83d120254af030ffe2d4c8a77a857d016680d8e179db12a47061b9bb",
-      "txBytes": 2478,
-      "feeSats": 3717,
+      "txid": "bbecf1fa027f084c8b9835312699168a26d604eb247b990d1ecb48286c26dbc3",
+      "txBytes": 2485,
+      "feeSats": 3728,
       "zeroConfChained": true,
-      "covenantOpCost": 192370,
-      "maxOpCost": 691200
+      "covenantOpCost": 193079,
+      "maxOpCost": 696800
     }
   ],
   "adversarialRejections": [
@@ -66,36 +66,36 @@
       "label": "Forge Medallion using Duplicate Copies of Stamp #1",
       "expectedRule": "require(slot > prevSlot)",
       "rejected": true,
-      "vmError": "BlazeForge.cash:43 Require statement failed at input 0 in contract BlazeForge.cash at line 43.\nFailing statement: require(slot > prevSlot);",
+      "vmError": "BlazeForge.cash:45 Require statement failed at input 0 in contract BlazeForge.cash at line 45.\nFailing statement: require(slot > prevSlot);",
       "failingContract": "BlazeForge.cash",
-      "failingLine": 43
+      "failingLine": 45
     },
     {
       "attack": "fake-category",
       "label": "Forge Medallion with Unregistered Fake Token Category",
       "expectedRule": "require(actualCat == expectedCat)",
       "rejected": true,
-      "vmError": "BlazeForge.cash:56 Require statement failed at input 0 in contract BlazeForge.cash at line 56.\nFailing statement: require(actualCat == expectedCat);",
+      "vmError": "BlazeForge.cash:58 Require statement failed at input 0 in contract BlazeForge.cash at line 58.\nFailing statement: require(actualCat == expectedCat);",
       "failingContract": "BlazeForge.cash",
-      "failingLine": 56
+      "failingLine": 58
     },
     {
       "attack": "anti-burn-keep-stamps",
       "label": "Anti-Burn Cheat: Try Keeping Stamp #5 in Change Output",
       "expectedRule": "require(tx.outputs[2].tokenCategory == 0x)",
       "rejected": true,
-      "vmError": "BlazeForge.cash:79 Require statement failed at input 0 in contract BlazeForge.cash at line 79.\nFailing statement: require(tx.outputs[2].tokenCategory == 0x);",
+      "vmError": "BlazeForge.cash:81 Require statement failed at input 0 in contract BlazeForge.cash at line 81.\nFailing statement: require(tx.outputs[2].tokenCategory == 0x);",
       "failingContract": "BlazeForge.cash",
-      "failingLine": 79
+      "failingLine": 81
     },
     {
       "attack": "steal-baton",
       "label": "Baton Hijack: Redirect Forge Minting Baton to Attacker Address",
       "expectedRule": "require(tx.outputs[0].lockingBytecode == tx.inputs[0].lockingBytecode)",
       "rejected": true,
-      "vmError": "BlazeForge.cash:25 Require statement failed at input 0 in contract BlazeForge.cash at line 25.\nFailing statement: require(tx.outputs[0].lockingBytecode == tx.inputs[0].lockingBytecode);",
+      "vmError": "BlazeForge.cash:26 Require statement failed at input 0 in contract BlazeForge.cash at line 26.\nFailing statement: require(tx.outputs[0].lockingBytecode == tx.inputs[0].lockingBytecode);",
       "failingContract": "BlazeForge.cash",
-      "failingLine": 25
+      "failingLine": 26
     }
   ],
   "summary": {

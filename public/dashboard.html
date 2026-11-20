@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Forge Workspace — cindr</title>
+  <meta name="description" content="Clean CashTokens workspace to claim Demo Stamps, forge Trophy NFTs in zero blocks, verify CashVM attack refusals, and inspect mempool batons.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/dashboard.css">
+</head>
+<body>
+  <a href="#workspace-main" class="skip-link">Skip to workspace</a>
+
+  <!-- QUIET TOP CHROME BAR -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="topbar-brand">
+        <a href="/dashboard" class="brand-lockup">
+          <svg class="brand-mark-svg" width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+            <polygon points="9,1.5 16,5.5 16,12.5 9,16.5 2,12.5 2,5.5" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+            <circle cx="9" cy="9" r="2.5" fill="var(--accent)"/>
+          </svg>
+          <span class="brand-name">cindr</span>
+        </a>
+        <span class="brand-sep" aria-hidden="true">/</span>
+        <a href="/" class="topbar-link">Overview</a>
+      </div>
+
+      <div class="topbar-controls">
+        <span class="network-chip" id="topbar-network-chip" title="Live backend target">
+          <span class="status-dot" id="topbar-status-dot" aria-hidden="true"></span>
+          <span id="topbar-network-label">Connecting…</span>
+        </span>
+
+        <div class="wallet-menu-wrap" id="wallet-menu-wrap">
+          <button
+            type="button"
+            class="wallet-trigger"
+            id="btn-wallet-menu"
+            aria-expanded="false"
+            aria-haspopup="true"
+            aria-controls="wallet-popover"
+          >
+            <span class="wallet-trigger-label" id="wallet-trigger-label">Loading wallet…</span>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M3.5 5.25L7 8.75L10.5 5.25" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+
+          <div class="wallet-popover" id="wallet-popover" role="dialog" aria-label="Wallet switcher" hidden>
+            <div class="popover-section">
+              <div class="popover-row-head">
+                <span class="popover-label">Active address</span>
+                <span class="mode-badge" id="popover-mode-badge">Sandbox</span>
+              </div>
+              <div class="joined-copy-row">
+                <code class="joined-code" id="popover-full-address">—</code>
+                <button type="button" class="joined-btn" id="btn-copy-address">Copy</button>
+              </div>
+            </div>
+
+            <div class="popover-section">
+              <div class="popover-row-head">
+                <span class="popover-label">Real BCH wallet</span>
+                <span class="wc-relay-tag" id="popover-wc-state-tag">WizardConnect</span>
+              </div>
+              <div class="popover-stack-btns">
+                <button type="button" class="btn-primary btn-full" id="btn-connect-live-wallet">
+                  Connect BCH wallet (QR / App)
+                </button>
+                <button type="button" class="btn-secondary btn-full" id="btn-disconnect-live-wallet" hidden>
+                  Disconnect live wallet
+                </button>
+              </div>
+              <p class="popover-hint" id="live-wallet-status-note">
+                Pair Selene, Cauldron, or Paytaca over BCH WizardConnect relay for non-custodial signing.
+              </p>
+            </div>
+
+            <div class="popover-section">
+              <button type="button" class="btn-secondary btn-full" id="btn-new-sandbox">
+                Create fresh sandbox wallet
+              </button>
+              <p class="popover-hint">
+                1-click ephemeral sandbox wallet to test instant 0-conf baton handoff without a funded wallet.
+              </p>
+            </div>
+
+            <div class="popover-section" id="popover-wallet-list-wrap" hidden>
+              <span class="popover-label">Session wallets</span>
+              <div class="session-wallet-list" id="popover-wallet-list"></div>
+            </div>
+
+            <form class="popover-section popover-form" id="form-custom-address" novalidate>
+              <label for="input-custom-address" class="popover-label">Inspect custom CashAddress (read &amp; unsigned tx)</label>
+              <div class="popover-input-row">
+                <input
+                  type="text"
+                  id="input-custom-address"
+                  class="text-input mono-input"
+                  placeholder="bchtest:qq..."
+                  autocomplete="off"
+                  spellcheck="false"
+                >
+                <button type="submit" class="btn-secondary">Load</button>
+              </div>
+              <p class="field-error" id="custom-address-error" hidden></p>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="workspace-container" id="workspace-main">
+    <!-- PAGE HEADER: NOUN TITLE + ONE CONTEXTUAL PRIMARY ACTION -->
+    <section class="page-head" aria-label="Workspace summary">
+      <div class="page-head-copy">
+        <h1 class="page-title">Forge workspace</h1>
+        <p class="page-subline" id="workspace-finding">Checking wallet stamps against compiled CashVM covenant…</p>
+      </div>
+      <div class="page-head-action">
+        <button type="button" class="btn-primary" id="btn-header-primary" disabled>
+          Loading…
+        </button>
+      </div>
+    </section>
+
+    <!-- RELATION-BASED UNDERLINE TABS -->
+    <div class="tab-bar" role="tablist" aria-label="Workspace views">
+      <button
+        type="button"
+        class="tab-btn is-active"
+        id="tab-btn-forge"
+        role="tab"
+        aria-selected="true"
+        aria-controls="panel-forge"
+        data-tab="forge"
+      >
+        Forge
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        id="tab-btn-proofs"
+        role="tab"
+        aria-selected="false"
+        aria-controls="panel-proofs"
+        data-tab="proofs"
+        tabindex="-1"
+      >
+        Proofs &amp; attacks
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        id="tab-btn-network"
+        role="tab"
+        aria-selected="false"
+        aria-controls="panel-network"
+        data-tab="network"
+        tabindex="-1"
+      >
+        Network &amp; registry
+      </button>
+    </div>
+
+    <!-- TAB 1: FORGE (STAMPS, TIER, RECEIPT & ACTIVITY) -->
+    <section id="panel-forge" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-forge">
+      <!-- Single Divided Status Strip -->
+      <div class="status-strip" aria-label="Wallet metrics">
+        <div class="status-cell">
+          <span class="status-label">Held stamps</span>
+          <span class="status-value num" id="kpi-stamps">—</span>
+        </div>
+        <div class="status-cell">
+          <span class="status-label">Trophies minted</span>
+          <span class="status-value num" id="kpi-trophies">—</span>
+        </div>
+        <div class="status-cell">
+          <span class="status-label">Baton latency</span>
+          <span class="status-value num" id="kpi-latency">0 blocks</span>
+        </div>
+      </div>
+
+      <div class="forge-grid">
+        <!-- Left Panel: Stamp Slots & Tier Selection -->
+        <section class="panel" aria-label="Stamp slots and tier">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">Your stamps &amp; tier</h2>
+              <p class="panel-sub" id="tier-requirement-hint">Select a tier to see required distinct badge slots.</p>
+            </div>
+            <span class="slot-progress-pill num" id="slot-progress-pill">0 / 5 held</span>
+          </div>
+
+          <div class="tier-segmented" role="group" aria-label="Trophy tiers">
+            <button type="button" class="seg-btn is-active" data-tier="5" aria-pressed="true">5 · Medallion</button>
+            <button type="button" class="seg-btn" data-tier="9" aria-pressed="false">9 · Trophy</button>
+            <button type="button" class="seg-btn" data-tier="10" aria-pressed="false">10 · Trailblazer</button>
+          </div>
+
+          <!-- Signature Product Element: Crisp Stamp Slot Strip -->
+          <div class="slot-strip" id="stamp-slot-strip" aria-live="polite"></div>
+
+          <div class="action-bar">
+            <button type="button" class="btn-primary" id="btn-forge-action" disabled>
+              Forge BLAZE Medallion
+            </button>
+            <button type="button" class="btn-secondary" id="btn-claim-action">
+              Claim 5 demo stamps
+            </button>
+          </div>
+
+          <p class="action-note" id="action-readiness-note">
+            Demo Stamps fill slots 10–14 immediately with zero confirmation wait.
+          </p>
+
+          <!-- Dropdown / Disclosure for bulky UTXO table -->
+          <details class="disclosure" id="disclosure-utxos">
+            <summary class="disclosure-summary">
+              <span id="utxo-disclosure-label">Inspect stamp &amp; BCH UTXOs (0)</span>
+              <svg class="disclosure-chevron" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <path d="M3.5 5.25L7 8.75L10.5 5.25" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </summary>
+            <div class="disclosure-body" id="utxo-inspector-body">
+              <p class="empty-inline">No registered Stamp or Trophy UTXOs found in this wallet yet.</p>
+            </div>
+          </details>
+        </section>
+
+        <!-- Right Panel: Latest Transaction Receipt -->
+        <section class="panel" aria-label="Transaction receipt" aria-live="polite">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">Transaction receipt</h2>
+              <p class="panel-sub">Verifiable on-chain proof from CashVM execution.</p>
+            </div>
+            <span class="receipt-badge" id="dash-receipt-badge">Waiting</span>
+          </div>
+
+          <div class="receipt-empty" id="dash-receipt-empty">
+            <p class="empty-title">No transaction run yet</p>
+            <p class="empty-desc">
+              Claim 5 Demo Stamps first, or forge a Trophy directly if your address already holds badges.
+            </p>
+          </div>
+
+          <div class="receipt-error" id="dash-receipt-error" hidden>
+            <p class="error-headline" id="dash-error-title">Action failed</p>
+            <p class="error-message" id="dash-error-msg">—</p>
+            <button type="button" class="btn-secondary" id="btn-receipt-retry">Retry last action</button>
+          </div>
+
+          <div class="receipt-result" id="dash-receipt-result" hidden>
+            <div class="receipt-headline-row">
+              <strong class="receipt-result-title" id="dash-result-title">—</strong>
+              <span class="receipt-ms num" id="dash-result-ms">—</span>
+            </div>
+            <p class="receipt-result-summary" id="dash-result-summary">—</p>
+
+            <div class="receipt-field">
+              <span class="field-label" id="dash-txid-label">Transaction ID</span>
+              <div class="joined-copy-row">
+                <code class="joined-code" id="dash-result-txid">—</code>
+                <button type="button" class="joined-btn" id="btn-copy-txid">Copy</button>
+              </div>
+            </div>
+
+            <div class="receipt-kv-pair">
+              <div class="kv-item">
+                <span class="field-label">Tx size</span>
+                <span class="kv-val num" id="dash-result-bytes">—</span>
+              </div>
+              <div class="kv-item">
+                <span class="field-label">0-Conf baton</span>
+                <span class="kv-val" id="dash-result-zeroconf">—</span>
+              </div>
+            </div>
+
+            <!-- Dropdown / Disclosure for bulky baton outpoints, commitments & raw txHex -->
+            <details class="disclosure" id="disclosure-receipt-tech">
+              <summary class="disclosure-summary">
+                <span>Technical receipt &amp; raw hex</span>
+                <svg class="disclosure-chevron" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                  <path d="M3.5 5.25L7 8.75L10.5 5.25" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </summary>
+              <div class="disclosure-body tech-stack">
+                <div class="tech-row">
+                  <span class="tech-key">Spent baton</span>
+                  <code class="tech-val" id="tech-spent-baton">—</code>
+                </div>
+                <div class="tech-row">
+                  <span class="tech-key">Next baton</span>
+                  <code class="tech-val" id="tech-next-baton">—</code>
+                </div>
+                <div class="tech-row" id="tech-commit-row" hidden>
+                  <span class="tech-key">Trophy commitment</span>
+                  <code class="tech-val" id="tech-commitment">—</code>
+                </div>
+                <div class="tech-row">
+                  <span class="tech-key" id="tech-hex-label">Raw txHex</span>
+                  <div class="joined-copy-row">
+                    <code class="joined-code" id="tech-raw-hex">—</code>
+                    <button type="button" class="joined-btn" id="btn-copy-hex">Copy</button>
+                  </div>
+                </div>
+              </div>
+            </details>
+          </div>
+        </section>
+      </div>
+
+      <!-- Bottom Section: Clean Ruled Session Activity + Trophies Held -->
+      <div class="forge-bottom-grid">
+        <section class="panel" aria-label="Trophies held">
+          <div class="panel-header">
+            <h2 class="panel-title">Trophies in this wallet</h2>
+            <span class="muted-meta num" id="held-trophies-count">0 NFTs</span>
+          </div>
+          <div id="held-trophies-list">
+            <p class="empty-inline">No Trophy NFTs minted to this address yet.</p>
+          </div>
+        </section>
+
+        <section class="panel" aria-label="Session activity">
+          <div class="panel-header">
+            <h2 class="panel-title">Session activity</h2>
+            <span class="muted-meta num" id="activity-count">0 transactions</span>
+          </div>
+          <div id="activity-list">
+            <p class="empty-inline">Actions you run in this session appear here with expandable outpoints.</p>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <!-- TAB 2: PROOFS & ATTACKS (CASHVM ADVERSARIAL SUITE) -->
+    <section id="panel-proofs" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-proofs" hidden>
+      <div class="proofs-grid">
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">Adversarial exploit tests</h2>
+              <p class="panel-sub">Runs live forged transactions through compiled <code>BlazeForge.cash</code>.</p>
+            </div>
+          </div>
+          <div class="attack-list" role="group" aria-label="Select attack vector">
+            <button type="button" class="attack-row is-selected" data-attack="under-count-4" aria-pressed="true">
+              <span>
+                <strong class="attack-row-title">Forge with only 4 stamps</strong>
+                <span class="attack-row-sub">One badge short of the 5-stamp medallion threshold</span>
+              </span>
+              <code class="attack-line-tag">line 19</code>
+            </button>
+            <button type="button" class="attack-row" data-attack="duplicate-slot" aria-pressed="false">
+              <span>
+                <strong class="attack-row-title">Reuse duplicate Stamp #1</strong>
+                <span class="attack-row-sub">Submits identical slot indices instead of strictly ascending IDs</span>
+              </span>
+              <code class="attack-line-tag">line 45</code>
+            </button>
+            <button type="button" class="attack-row" data-attack="fake-category" aria-pressed="false">
+              <span>
+                <strong class="attack-row-title">Inject unregistered token category</strong>
+                <span class="attack-row-sub">Substitutes a forged CashToken category for an official badge</span>
+              </span>
+              <code class="attack-line-tag">line 58</code>
+            </button>
+            <button type="button" class="attack-row" data-attack="anti-burn-keep-stamps" aria-pressed="false">
+              <span>
+                <strong class="attack-row-title">Keep Stamp #5 in change output</strong>
+                <span class="attack-row-sub">Attempts to keep spent stamps instead of burning them in Output 2</span>
+              </span>
+              <code class="attack-line-tag">line 81</code>
+            </button>
+            <button type="button" class="attack-row" data-attack="steal-baton" aria-pressed="false">
+              <span>
+                <strong class="attack-row-title">Redirect Minting Baton to attacker</strong>
+                <span class="attack-row-sub">Sends contract Output 0 minting key to a private wallet</span>
+              </span>
+              <code class="attack-line-tag">line 26</code>
+            </button>
+          </div>
+        </div>
+
+        <div class="panel" id="dash-attack-panel" aria-live="polite">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">CashVM verdict</h2>
+              <p class="panel-sub" id="dash-attack-label">Forge Medallion with only 4 Stamps</p>
+            </div>
+            <span class="pill-danger" id="dash-attack-pill">Rejected at line 19</span>
+          </div>
+
+          <div class="attack-verdict-meta">
+            <span class="muted-meta num" id="dash-attack-ms">Click an attack to execute live</span>
+            <button type="button" class="btn-secondary btn-xs" id="btn-retry-dash-attack" hidden>Retry</button>
+          </div>
+
+          <p class="attack-plain-copy" id="dash-attack-plain">
+            Select any exploit on the left to watch CashVM build the malicious transaction and reject it at consensus level.
+          </p>
+
+          <div class="rule-callout">
+            <span class="field-label">Failing covenant rule</span>
+            <code class="rule-code" id="dash-attack-rule">require(tier == 5 || tier == 9 || tier == 10)</code>
+          </div>
+
+          <details class="disclosure" id="disclosure-vm-trace">
+            <summary class="disclosure-summary">
+              <span>Raw CashVM stack error trace</span>
+              <svg class="disclosure-chevron" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <path d="M3.5 5.25L7 8.75L10.5 5.25" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </summary>
+            <div class="disclosure-body">
+              <pre class="vm-trace-pre" id="dash-attack-trace">Select any exploit vector to run live verification via POST /api/attack.</pre>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: NETWORK & REGISTRY (SPECS, BATONS, & 15-SLOT TABLE) -->
+    <section id="panel-network" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-network" hidden>
+      <div class="network-top-grid">
+        <section class="panel" aria-label="Compiled covenants">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">Compiled covenants</h2>
+              <p class="panel-sub">May 2026 CashVM Layla loop contracts (<code>OP_BEGIN</code> / <code>OP_UNTIL</code>).</p>
+            </div>
+            <button type="button" class="btn-secondary btn-xs" id="btn-refresh-network">Refresh</button>
+          </div>
+          <div class="spec-rows" id="covenant-specs-list">
+            <p class="empty-inline">Loading covenant metrics…</p>
+          </div>
+        </section>
+
+        <section class="panel" aria-label="Mempool batons">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">0-Conf mempool batons</h2>
+              <p class="panel-sub">Live unconfirmed baton outpoints tracked between sequential mints.</p>
+            </div>
+            <span class="muted-meta num" id="baton-pending-badge">0 pending</span>
+          </div>
+          <div class="spec-rows" id="baton-status-list">
+            <p class="empty-inline">Loading baton outpoints…</p>
+          </div>
+        </section>
+      </div>
+
+      <section class="panel registry-panel" aria-label="Registered badge slots">
+        <div class="panel-header registry-header">
+          <div>
+            <h2 class="panel-title">Registered TokenHunt &amp; Demo slots</h2>
+            <p class="panel-sub">Packed into the immutable 33-byte-per-slot covenant registry.</p>
+          </div>
+          <div class="filter-pills" role="group" aria-label="Filter badge slots">
+            <button type="button" class="filter-pill is-active" data-filter="all" aria-pressed="true">All (15)</button>
+            <button type="button" class="filter-pill" data-filter="official" aria-pressed="false">Official (10)</button>
+            <button type="button" class="filter-pill" data-filter="demo" aria-pressed="false">Demo (5)</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="num-col">Slot</th>
+                <th>Badge</th>
+                <th>Kind</th>
+                <th>Commitment rule</th>
+                <th>CashToken category ID</th>
+              </tr>
+            </thead>
+            <tbody id="registry-table-body">
+              <tr><td colspan="5" class="empty-cell">Loading registry slots…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <!-- LIVE BCH WALLET QR PAIRING MODAL (WIZARDCONNECT) -->
+  <div
+    class="wc-modal-backdrop"
+    id="wc-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="wc-modal-title"
+    hidden
+  >
+    <div class="wc-modal-card">
+      <div class="wc-modal-head">
+        <div>
+          <p class="eyebrow-tag">WizardConnect · BCH Relay</p>
+          <h2 class="wc-modal-title" id="wc-modal-title">Connect Bitcoin Cash wallet</h2>
+        </div>
+        <button type="button" class="wc-close-btn" id="btn-wc-close" aria-label="Close wallet dialog">
+          ×
+        </button>
+      </div>
+
+      <p class="wc-modal-sub">
+        Scan with a WizardConnect-compatible BCH CashTokens wallet (Selene, Cauldron, Paytaca) or copy the pairing link.
+      </p>
+
+      <div class="wc-qr-stage" id="wc-qr-stage">
+        <canvas id="wc-qr-canvas" width="232" height="232" aria-label="Wallet pairing QR code"></canvas>
+        <div class="wc-qr-loading" id="wc-qr-loading">
+          <span class="wc-loading-label">Opening encrypted BCH relay…</span>
+        </div>
+      </div>
+
+      <div class="wc-modal-actions">
+        <a
+          class="btn-primary wc-action-link"
+          id="btn-wc-open-app"
+          href="#"
+          aria-disabled="true"
+        >
+          Open wallet app
+        </a>
+        <button type="button" class="btn-secondary" id="btn-wc-copy-uri" disabled>
+          Copy pairing link
+        </button>
+      </div>
+
+      <p class="wc-status-line" id="wc-status-line" aria-live="polite">
+        Starting secure relay on wss://relay.riften.net…
+      </p>
+
+      <p class="wc-modal-foot">
+        Non-custodial — private keys remain in your wallet. Close at any time to use 1-click Sandbox mode.
+      </p>
+    </div>
+  </div>
+
+  <script type="module" src="/dashboard.js"></script>
+</body>
+</html>

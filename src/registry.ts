@@ -9,6 +9,10 @@ export interface StampSlot {
   /** Single-byte NFT commitment rule (0..254), or null to match any commitment / FT >= 1. */
   commitmentRule: number | null;
   kind: 'official' | 'demo' | 'merchant';
+  /** Whether the official category is live on bchblaze.cash/tokenhunt or awaiting organizer activation. */
+  activationStatus?: 'live' | 'staging';
+  /** Optional related DEX swap token category (e.g. PUSD on Cauldron for paryon-procurer). */
+  swapReferenceCategory?: string;
 }
 
 export interface TokenHuntTierDef {
@@ -34,60 +38,71 @@ export const OFFICIAL_TOKENHUNT_CATALOG: readonly Omit<StampSlot, 'slot' | 'kind
     name: 'Paytaca Pioneer',
     category: 'f1a9bd066b904eccfb10dc271abf669932a815420408e6c1f97f2a8b88944c1d',
     commitmentRule: null,
+    activationStatus: 'live',
   },
   {
     id: 'template-titan',
     name: 'Template Titan',
     category: '676b8d5cef572179e4633124eb0a873507b525c3053a7461518aafa90d076dd6',
     commitmentRule: null,
+    activationStatus: 'live',
   },
   {
     id: 'selene-sorcerer',
     name: 'Selene Sorcerer',
     category: 'e2ca1f9374a0c299677654b9030076ab3d017c10beeb51f1d77edaf7c5a4baa0',
     commitmentRule: null,
+    activationStatus: 'live',
   },
   {
     id: 'showcase-showoff',
     name: 'Showcase Showoff (Staging)',
     category: '0404040404040404040404040404040404040404040404040404040404040404',
     commitmentRule: null,
+    activationStatus: 'staging',
   },
   {
     id: 'consensus-contributor',
     name: 'Consensus Contributor',
     category: '9762dd430954296c4ff2cc0745399ed479250e13d91fb206a350376ed994013b',
     commitmentRule: null,
+    activationStatus: 'live',
   },
   {
     id: 'hidden-6',
     name: 'Hidden #6 (Staging)',
     category: '0606060606060606060606060606060606060606060606060606060606060606',
     commitmentRule: null,
+    activationStatus: 'staging',
   },
   {
     id: 'paryon-procurer',
     name: 'Paryon Procurer (Staging)',
     category: '0707070707070707070707070707070707070707070707070707070707070707',
     commitmentRule: null,
+    activationStatus: 'staging',
+    swapReferenceCategory: '2469acc5afa4b10cb5b5c04afb89c3a3ffd61c5da9c01e26d00951cae2a02544',
   },
   {
     id: 'reward-revolutionary',
     name: 'Reward Revolutionary',
     category: '96a7af30d09d500469533eb7c6e1295257549ca22f4def3a390c56c4d132fbbd',
     commitmentRule: null,
+    activationStatus: 'live',
   },
   {
     id: 'blaze-builder',
     name: 'BLAZE Builder (Staging)',
     category: '0909090909090909090909090909090909090909090909090909090909090909',
     commitmentRule: null,
+    activationStatus: 'staging',
   },
   {
     id: 'trailblazer',
     name: 'Trailblazer 2025',
     category: 'cc080d0bf27a2b6c8d006a0f1f0c1695b485ed75caff5264b90c68e63f232ff4',
     commitmentRule: null,
+    activationStatus: 'live',
   },
 ];
 
@@ -134,14 +149,20 @@ export function createBlazeTokenHuntRegistry(
   demoCategoryHex: string,
   categoryOverrides: Partial<Record<string, string>> = {}
 ): StampSlot[] {
-  const official: StampSlot[] = OFFICIAL_TOKENHUNT_CATALOG.map((item, idx) => ({
-    slot: idx,
-    id: item.id,
-    name: item.name,
-    category: categoryOverrides[item.id] ?? item.category,
-    commitmentRule: item.commitmentRule,
-    kind: 'official',
-  }));
+  const official: StampSlot[] = OFFICIAL_TOKENHUNT_CATALOG.map((item, idx) => {
+    const override = categoryOverrides[item.id]?.trim().toLowerCase();
+    const hasOverride = Boolean(override && /^[0-9a-f]{64}$/.test(override));
+    return {
+      slot: idx,
+      id: item.id,
+      name: hasOverride ? item.name.replace(/\s*\(Staging\)$/i, '') : item.name,
+      category: hasOverride ? override! : item.category,
+      commitmentRule: item.commitmentRule,
+      kind: 'official',
+      activationStatus: hasOverride ? 'live' : item.activationStatus,
+      ...(item.swapReferenceCategory ? { swapReferenceCategory: item.swapReferenceCategory } : {}),
+    };
+  });
 
   const demo: StampSlot[] = [1, 2, 3, 4, 5].map((n, offset) => ({
     slot: official.length + offset,
@@ -150,6 +171,7 @@ export function createBlazeTokenHuntRegistry(
     category: demoCategoryHex,
     commitmentRule: n,
     kind: 'demo',
+    activationStatus: 'live',
   }));
 
   return [...official, ...demo];

@@ -3,3 +3,12 @@ dist/
 *.log
 .DS_Store
 Thumbs.db
+.env
+.env.*
+!.env.example
+.chipnet-deployer.json
+bchblaze_cash.html
+corpus/
+graphify-out/
+site_pages/
+user-research/
