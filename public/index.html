@@ -1,20 +1,22 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-type="software">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="page-type" content="software">
+  <meta name="site-kind" content="software">
   <title>cindr — CashTokens Burn-to-Mint Loop Covenant</title>
   <meta name="description" content="cindr replaces the missing trophy contract in tokenhunt.js with a May 2026 CashVM loop covenant and zero-confirmation baton chaining.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
   <a href="#story" class="skip-link">Skip to content</a>
 
   <main>
-    <!-- STAGE 1: PURE FULL-BLEED STUDIO SILVER-GREY HERO + TWO-LAYER 3D FIBER-TO-IRIS -->
+    <!-- STAGE 1: FROSTED SLATE-SILVER STUDIO HERO + INTERACTIVE 3D FIBER-TO-IRIS -->
     <section class="hero-scroll-stage" id="hero-stage" aria-label="Interactive fiber to iris overview">
       <div class="hero-sticky-viewport" id="hero-card">
         <canvas id="iris-canvas" class="iris-canvas" aria-hidden="true"></canvas>
@@ -28,24 +30,24 @@
 
           <nav class="hero-nav" aria-label="Page sections">
             <a href="#story" class="hero-nav-link">
-              <span>story</span>
-              <svg class="hero-nav-icon" width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true"><rect width="11" height="11" rx="1.5" fill="currentColor"/><path d="M3.4 7.6L7.6 3.4M7.6 3.4H4.4M7.6 3.4V6.6" stroke="var(--bg-hero-light)" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>overview</span>
+              <svg class="hero-nav-icon" width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true"><rect width="11" height="11" rx="2" fill="currentColor"/><path d="M3.4 7.6L7.6 3.4M7.6 3.4H4.4M7.6 3.4V6.6" stroke="var(--frost-100)" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </a>
             <a href="#covenant" class="hero-nav-link">
-              <span>covenant</span>
-              <svg class="hero-nav-icon" width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true"><rect width="11" height="11" rx="1.5" fill="currentColor"/><path d="M3.4 7.6L7.6 3.4M7.6 3.4H4.4M7.6 3.4V6.6" stroke="var(--bg-hero-light)" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>architecture</span>
+              <svg class="hero-nav-icon" width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true"><rect width="11" height="11" rx="2" fill="currentColor"/><path d="M3.4 7.6L7.6 3.4M7.6 3.4H4.4M7.6 3.4V6.6" stroke="var(--frost-100)" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </a>
             <a href="#tiers" class="hero-nav-link">
               <span>tiers</span>
-              <svg class="hero-nav-icon" width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true"><rect width="11" height="11" rx="1.5" fill="currentColor"/><path d="M3.4 7.6L7.6 3.4M7.6 3.4H4.4M7.6 3.4V6.6" stroke="var(--bg-hero-light)" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <svg class="hero-nav-icon" width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true"><rect width="11" height="11" rx="2" fill="currentColor"/><path d="M3.4 7.6L7.6 3.4M7.6 3.4H4.4M7.6 3.4V6.6" stroke="var(--frost-100)" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </a>
             <a href="#proofs" class="hero-nav-link">
-              <span>refusal proofs</span>
-              <svg class="hero-nav-icon" width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true"><rect width="11" height="11" rx="1.5" fill="currentColor"/><path d="M3.4 7.6L7.6 3.4M7.6 3.4H4.4M7.6 3.4V6.6" stroke="var(--bg-hero-light)" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>playground</span>
+              <svg class="hero-nav-icon" width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true"><rect width="11" height="11" rx="2" fill="currentColor"/><path d="M3.4 7.6L7.6 3.4M7.6 3.4H4.4M7.6 3.4V6.6" stroke="var(--frost-100)" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </a>
             <a href="/dashboard" class="hero-nav-link hero-nav-link-emphasis">
-              <span>dashboard</span>
-              <svg class="hero-nav-icon" width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true"><rect width="11" height="11" rx="1.5" fill="currentColor"/><path d="M3.4 7.6L7.6 3.4M7.6 3.4H4.4M7.6 3.4V6.6" stroke="var(--bg-hero-light)" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>workspace</span>
+              <svg class="hero-nav-icon" width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true"><rect width="11" height="11" rx="2" fill="currentColor"/><path d="M3.4 7.6L7.6 3.4M7.6 3.4H4.4M7.6 3.4V6.6" stroke="var(--surface-white)" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </a>
           </nav>
         </header>
@@ -55,7 +57,7 @@
         <div class="hero-footer-grid">
           <div class="hero-headline-slot">
             <button type="button" class="hero-corner-toggle" id="btn-cycle-state" aria-label="Toggle stamps and iris animation state" title="Toggle fiber / iris state">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M9 3L5 7L9 11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M9 3L5 7L9 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
             <h1 class="hero-headline" id="hero-headline">
               <span class="hl-line hl-indent-1">FIVE LOOSE</span>
@@ -67,8 +69,8 @@
           </div>
 
           <div class="hero-state-center">
-            <a href="#story" class="hero-scroll-arrow" id="scroll-cue-link" aria-label="Scroll to story">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2.5V13.5M8 13.5L4 9.5M8 13.5L12 9.5" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <a href="#story" class="hero-scroll-arrow" id="scroll-cue-link" aria-label="Scroll to product overview">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2.5V13.5M8 13.5L4 9.5M8 13.5L12 9.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </a>
           </div>
 
@@ -84,47 +86,81 @@
               Burn 5, 9, or 10 TokenHunt CashTokens in one Layla loop transaction to mint a verified Trophy NFT without block delays.
             </p>
             <div class="hero-actions">
-              <a href="#proofs" class="btn-hero-pill">test live refusal</a>
+              <a href="/dashboard" class="btn-hero-primary">Open Forge Workspace</a>
+              <a href="#proofs" class="btn-hero-pill">Test live refusal</a>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- SEAM: SMOKED OBSIDIAN GLASS MARQUEE -->
-    <div class="marquee-seam" aria-hidden="true">
-      <div class="marquee-track">
-        <span class="marquee-item">May 2026 Layla loops</span>
-        <span class="marquee-item">Zero-confirmation baton handoff</span>
-        <span class="marquee-item">Consensus token burn</span>
-        <span class="marquee-item">Verified CashVM contract suite</span>
-        <span class="marquee-item">May 2026 Layla loops</span>
-        <span class="marquee-item">Zero-confirmation baton handoff</span>
-        <span class="marquee-item">Consensus token burn</span>
-        <span class="marquee-item">Verified CashVM contract suite</span>
+    <!-- ALGOLIA-STYLE PROTOCOL PIPELINE SEAM -->
+    <section class="pipeline-seam" aria-label="Protocol pipeline stages">
+      <div class="container">
+        <ol class="pipeline-grid">
+          <li class="pipeline-step">
+            <span class="pipeline-num">01</span>
+            <div>
+              <strong class="pipeline-title">Collect or claim</strong>
+              <span class="pipeline-sub">5 free Demo Stamps (0-conf) or official TokenHunt NFTs</span>
+            </div>
+          </li>
+          <li class="pipeline-step">
+            <span class="pipeline-num">02</span>
+            <div>
+              <strong class="pipeline-title">Layla loop verification</strong>
+              <span class="pipeline-sub">CashVM <code>OP_BEGIN</code> / <code>OP_UNTIL</code> enforces unique ascending slots</span>
+            </div>
+          </li>
+          <li class="pipeline-step">
+            <span class="pipeline-num">03</span>
+            <div>
+              <strong class="pipeline-title">Consensus token burn</strong>
+              <span class="pipeline-sub">Output 2 guarantees <code>tokenCategory == 0x</code> forever</span>
+            </div>
+          </li>
+          <li class="pipeline-step">
+            <span class="pipeline-num">04</span>
+            <div>
+              <strong class="pipeline-title">Zero-block minting</strong>
+              <span class="pipeline-sub">Mempool baton chaining mints Trophy NFTs back-to-back</span>
+            </div>
+          </li>
+        </ol>
       </div>
-    </div>
+    </section>
 
     <div class="editorial-flow">
-      <!-- SECTION 1 (#story): DEEP OBSIDIAN STUDIO — PLAIN-ENGLISH STORY & UNIFIED TELEMETRY -->
-      <section class="band-dark" id="story">
+      <!-- SECTION 1 (#story): ALGOLIA FROST-ALABASTER STUDIO — UI-FIRST STEP CARDS + XENON TELEMETRY -->
+      <section class="band-frost" id="story">
         <div class="container">
           <div class="section-header-split">
-            <h2 class="section-heading section-heading-dark">
-              Five stamps in.<br>One permanent trophy out.
-            </h2>
-            <p class="section-lead section-lead-dark">
-              During BCH BLAZE 2026, hunters collect digital event badges inside <code>tokenhunt.js</code> — but clicking Forge hits an unfinished stub. cindr supplies the missing Bitcoin Cash contract that checks your stamps, burns them on-chain, and mints a permanent Trophy NFT in one click.
+            <div>
+              <span class="section-eyebrow">Product overview · How cindr works</span>
+              <h2 class="section-heading">
+                Five stamps in.<br>One permanent trophy out.
+              </h2>
+            </div>
+            <p class="section-lead">
+              During BCH BLAZE 2026, hunters collect digital event badges inside <code>tokenhunt.js</code> — but clicking Forge hits an unfinished stub. <strong>cindr</strong> supplies the missing Bitcoin Cash contract that checks your stamps, burns them on-chain, and mints a permanent Trophy NFT in one click.
             </p>
           </div>
 
           <div class="journey-grid">
-            <article class="glass-step reveal-card">
-              <svg class="step-emblem" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-                <circle cx="9" cy="10" r="4" stroke="currentColor" stroke-width="1.6"/>
-                <circle cx="19" cy="10" r="4" stroke="currentColor" stroke-width="1.6"/>
-                <circle cx="14" cy="19" r="4" stroke="currentColor" stroke-width="1.6"/>
-              </svg>
+            <article class="ui-step-card reveal-card">
+              <div class="ui-schematic" aria-hidden="true">
+                <div class="ui-schematic-head">
+                  <span class="sch-tag">Step 01 · Ingress</span>
+                  <span class="sch-pill sch-pill-blue">0-conf</span>
+                </div>
+                <div class="sch-slots">
+                  <span class="sch-slot is-lit">10</span>
+                  <span class="sch-slot is-lit">11</span>
+                  <span class="sch-slot is-lit">12</span>
+                  <span class="sch-slot is-lit">13</span>
+                  <span class="sch-slot is-lit">14</span>
+                </div>
+              </div>
               <div class="step-body">
                 <h3 class="step-title">Collect or claim stamps</h3>
                 <p class="step-desc">Gather 5, 9, or 10 distinct event badges — or claim 5 free Demo Stamps in one click if your wallet starts empty.</p>
@@ -132,12 +168,18 @@
               <span class="step-footnote">StampDispenser.cash · 0-conf faucet</span>
             </article>
 
-            <article class="glass-step reveal-card">
-              <svg class="step-emblem" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-                <circle cx="14" cy="14" r="9.5" stroke="currentColor" stroke-width="1.6"/>
-                <path d="M14 4.5V8M23.5 14H20M14 23.5V20M4.5 14H8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-                <circle cx="14" cy="14" r="3" stroke="currentColor" stroke-width="1.6"/>
-              </svg>
+            <article class="ui-step-card reveal-card">
+              <div class="ui-schematic" aria-hidden="true">
+                <div class="ui-schematic-head">
+                  <span class="sch-tag">Step 02 · Loop</span>
+                  <span class="sch-pill sch-pill-indigo">OP_BEGIN</span>
+                </div>
+                <div class="sch-flow-row">
+                  <code>slot &gt; prevSlot</code>
+                  <span class="sch-arrow">-&gt;</span>
+                  <code>vout[2]: burn</code>
+                </div>
+              </div>
               <div class="step-body">
                 <h3 class="step-title">Verify and burn in one loop</h3>
                 <p class="step-desc">A single Bitcoin Cash transaction verifies every stamp slot is unique and destroys those tokens forever so nobody can double-claim.</p>
@@ -145,13 +187,18 @@
               <span class="step-footnote">BlazeForge.cash · OP_BEGIN / OP_UNTIL</span>
             </article>
 
-            <article class="glass-step reveal-card">
-              <svg class="step-emblem" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-                <path d="M6 19C9 11 19 11 22 19" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-                <path d="M10 9L14 5L18 9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                <circle cx="6" cy="19" r="2.2" fill="currentColor"/>
-                <circle cx="22" cy="19" r="2.2" fill="currentColor"/>
-              </svg>
+            <article class="ui-step-card reveal-card">
+              <div class="ui-schematic" aria-hidden="true">
+                <div class="ui-schematic-head">
+                  <span class="sch-tag">Step 03 · Output</span>
+                  <span class="sch-pill sch-pill-emerald">Verified</span>
+                </div>
+                <div class="sch-flow-row">
+                  <code>vout[0]: baton</code>
+                  <span class="sch-arrow">+</span>
+                  <code>vout[1]: NFT</code>
+                </div>
+              </div>
               <div class="step-body">
                 <h3 class="step-title">Mint with zero block waiting</h3>
                 <p class="step-desc">Normally a shared minting key forces a 10-minute wait per person. cindr passes the key forward in mempool for instant back-to-back mints.</p>
@@ -216,20 +263,23 @@
         </div>
       </section>
 
-      <!-- SECTION 2 (#covenant): SILVER-STONE GROUND — FROSTED VS OBSIDIAN SPLIT CONTRAST -->
-      <section class="band-light" id="covenant">
+      <!-- SECTION 2 (#covenant): DEEP XENON NAVY — BEFORE / AFTER CODE COMPARISON -->
+      <section class="band-xenon" id="covenant">
         <div class="container">
           <div class="section-header-split">
-            <h2 class="section-heading">
-              Browser checks can be faked.<br>Bitcoin Cash loops cannot.
-            </h2>
-            <p class="section-lead">
-              Checking event badges only inside website JavaScript leaves wallets stalled or open to cheats. Moving the check into an on-chain CashVM loop makes the rules automatic.
+            <div>
+              <span class="section-eyebrow eyebrow-on-dark">Architecture contrast · Consensus vs UI</span>
+              <h2 class="section-heading heading-on-dark">
+                Browser checks can be faked.<br>Bitcoin Cash loops cannot.
+              </h2>
+            </div>
+            <p class="section-lead lead-on-dark">
+              Checking event badges only inside website JavaScript leaves wallets stalled or open to cheats. Moving the check into an on-chain CashVM loop makes the rules automatic and unstoppable.
             </p>
           </div>
 
           <div class="split-grid">
-            <article class="contrast-panel contrast-glass-light reveal-card">
+            <article class="contrast-panel contrast-panel-muted reveal-card">
               <div class="contrast-head-row">
                 <h3 class="contrast-title">Today's browser stub</h3>
                 <span class="contrast-pill contrast-pill-muted">Blocked in UI</span>
@@ -239,13 +289,19 @@
                 <li><strong>10-minute crowd stall:</strong> A naive shared minting key blocks everyone else until miners confirm the next block.</li>
                 <li><strong>Easy to bypass:</strong> Client-side JavaScript alone cannot prevent a user from reusing the same badge twice.</li>
               </ul>
-              <pre class="contrast-code">// bchblaze.cash/js/tokenhunt.js
-function buildForgeTx(utxos, tier) {
+              <div class="code-window code-window-muted">
+                <div class="code-win-bar">
+                  <span class="win-dots"><i></i><i></i><i></i></span>
+                  <span class="win-file">bchblaze.cash/js/tokenhunt.js</span>
+                </div>
+                <pre class="contrast-code">function buildForgeTx(utxos, tier) {
+  // TODO: wire up once contract exists
   throw new Error("Trophy contract not connected");
 }</pre>
+              </div>
             </article>
 
-            <article class="contrast-panel contrast-glass-obsidian reveal-card">
+            <article class="contrast-panel contrast-panel-active reveal-card">
               <div class="contrast-head-row">
                 <h3 class="contrast-title">cindr covenant</h3>
                 <span class="contrast-pill contrast-pill-valid">Enforced by CashVM</span>
@@ -255,48 +311,62 @@ function buildForgeTx(utxos, tier) {
                 <li><strong>Guaranteed token burn:</strong> Output 2 must carry zero token categories (<code>tokenCategory == 0x</code>), destroying spent stamps forever.</li>
                 <li><strong>Zero-wait baton handoff:</strong> Output 0 keeps the minting key pinned at input 0 and live in mempool for back-to-back mints.</li>
               </ul>
-              <pre class="contrast-code">do {
+              <div class="code-window code-window-active">
+                <div class="code-win-bar">
+                  <span class="win-dots"><i></i><i></i><i></i></span>
+                  <span class="win-file">contracts/BlazeForge.cash · May 2026</span>
+                </div>
+                <pre class="contrast-code">do {
   require(slot &gt; prevSlot);
   require(actualCat == expectedCat);
   i = i + 1;
 } while (i &lt;= tier);</pre>
+              </div>
             </article>
           </div>
         </div>
       </section>
 
-      <!-- SECTION 3 (#tiers): OBSIDIAN STUDIO — TROPHY PEDESTALS + LIQUID-GOLD RECEIPT POP -->
-      <section class="band-dark" id="tiers">
+      <!-- SECTION 3 (#tiers): FROST ALABASTER STUDIO — TIERED TROPHY PEDESTALS -->
+      <section class="band-frost" id="tiers">
         <div class="container">
           <div class="section-header-split">
-            <h2 class="section-heading section-heading-dark">
-              Three tiers, sealed forever<br>inside each trophy.
-            </h2>
-            <p class="section-lead section-lead-dark">
-              Every minted NFT carries its burned stamp slots baked directly into its immutable CashTokens commitment bytes. Hover, focus, or tap any card to peel open its verified CashVM fixture receipt.
+            <div>
+              <span class="section-eyebrow">On-chain commitments · Trophy tiers</span>
+              <h2 class="section-heading">
+                Three tiers, sealed forever<br>inside each trophy.
+              </h2>
+            </div>
+            <p class="section-lead">
+              Every minted NFT carries its burned stamp slots baked directly into its immutable CashTokens commitment bytes. Hover, focus, or click any card to inspect its verified CashVM fixture receipt.
             </p>
           </div>
 
           <div class="tiers-grid">
-            <article class="tier-card tier-card-bronze reveal-card" tabindex="0" role="button" aria-expanded="false">
+            <article class="tier-card tier-card-medallion reveal-card" tabindex="0" role="button" aria-expanded="false">
               <div class="tier-top-row">
                 <span class="tier-count-badge">5 Stamps</span>
-                <svg class="tier-emblem" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-                  <polygon points="14,3 24,10.5 20,23 8,23 4,10.5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
-                  <circle cx="14" cy="14" r="3" stroke="currentColor" stroke-width="1.5"/>
-                </svg>
+                <span class="tier-rank-pill">Tier 5</span>
               </div>
-              <div>
+              <div class="tier-copy-wrap">
                 <h3 class="tier-title">BLAZE Medallion</h3>
                 <p class="tier-subtitle">Starter tier · works with Demo Stamps</p>
                 <p class="tier-rule">Burns any 5 distinct registered badges or 1-click Demo Stamps in strict slot order.</p>
+                <div class="tier-byte-bar" aria-hidden="true">
+                  <span class="byte-chip byte-chip-tier">05</span>
+                  <span class="byte-chip">0a</span>
+                  <span class="byte-chip">0b</span>
+                  <span class="byte-chip">0c</span>
+                  <span class="byte-chip">0d</span>
+                  <span class="byte-chip">0e</span>
+                </div>
               </div>
               <div class="tier-bottom">
                 <div class="tier-stats">
                   <span>1,770 bytes</span>
                   <span>2,655 sats fee</span>
                 </div>
-                <span class="tier-cue">Hover, focus, or tap for fixture receipt</span>
+                <span class="tier-cue">Click or hover for fixture receipt</span>
               </div>
               <div class="tier-sticker" aria-label="Verified Tier 5 fixture receipt">
                 <span class="tier-sticker-head">tier 5 commitment fixture</span>
@@ -305,26 +375,30 @@ function buildForgeTx(utxos, tier) {
               </div>
             </article>
 
-            <article class="tier-card tier-card-gold reveal-card" tabindex="0" role="button" aria-expanded="false">
+            <article class="tier-card tier-card-trophy reveal-card" tabindex="0" role="button" aria-expanded="false">
               <div class="tier-top-row">
                 <span class="tier-count-badge">9 Stamps</span>
-                <svg class="tier-emblem" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-                  <circle cx="14" cy="14" r="10" stroke="currentColor" stroke-width="1.6"/>
-                  <circle cx="14" cy="14" r="5" stroke="currentColor" stroke-width="1.5"/>
-                  <circle cx="14" cy="14" r="1.8" fill="currentColor"/>
-                </svg>
+                <span class="tier-rank-pill">Tier 9</span>
               </div>
-              <div>
+              <div class="tier-copy-wrap">
                 <h3 class="tier-title">BLAZE Trophy</h3>
                 <p class="tier-subtitle">Full official TokenHunt completion</p>
                 <p class="tier-rule">Burns all 9 official BCH ecosystem project badges verified on-chain inside one loop.</p>
+                <div class="tier-byte-bar" aria-hidden="true">
+                  <span class="byte-chip byte-chip-tier">09</span>
+                  <span class="byte-chip">00</span>
+                  <span class="byte-chip">01</span>
+                  <span class="byte-chip">...</span>
+                  <span class="byte-chip">07</span>
+                  <span class="byte-chip">08</span>
+                </div>
               </div>
               <div class="tier-bottom">
                 <div class="tier-stats">
                   <span>2,342 bytes</span>
                   <span>3,513 sats fee</span>
                 </div>
-                <span class="tier-cue">Hover, focus, or tap for fixture receipt</span>
+                <span class="tier-cue">Click or hover for fixture receipt</span>
               </div>
               <div class="tier-sticker" aria-label="Verified Tier 9 fixture receipt">
                 <span class="tier-sticker-head">tier 9 commitment fixture</span>
@@ -333,25 +407,30 @@ function buildForgeTx(utxos, tier) {
               </div>
             </article>
 
-            <article class="tier-card tier-card-radiant reveal-card" tabindex="0" role="button" aria-expanded="false">
+            <article class="tier-card tier-card-trailblazer reveal-card" tabindex="0" role="button" aria-expanded="false">
               <div class="tier-top-row">
                 <span class="tier-count-badge">10 Stamps</span>
-                <svg class="tier-emblem" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-                  <circle cx="14" cy="14" r="10.5" stroke="currentColor" stroke-width="1.6"/>
-                  <path d="M14 2.5V7M25.5 14H21M14 25.5V21M2.5 14H7M22.1 5.9L19 9M22.1 22.1L19 19M5.9 22.1L9 19M5.9 5.9L9 9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-                </svg>
+                <span class="tier-rank-pill">Tier 10</span>
               </div>
-              <div>
+              <div class="tier-copy-wrap">
                 <h3 class="tier-title">Trailblazer Trophy</h3>
                 <p class="tier-subtitle">Maximum rank · under CashVM limit</p>
                 <p class="tier-rule">Burns all 9 badges plus Trailblazer 2025 inside a single transaction within opcode limits.</p>
+                <div class="tier-byte-bar" aria-hidden="true">
+                  <span class="byte-chip byte-chip-tier">0a</span>
+                  <span class="byte-chip">00</span>
+                  <span class="byte-chip">01</span>
+                  <span class="byte-chip">...</span>
+                  <span class="byte-chip">08</span>
+                  <span class="byte-chip">09</span>
+                </div>
               </div>
               <div class="tier-bottom">
                 <div class="tier-stats">
                   <span>2,485 bytes</span>
                   <span>3,728 sats fee</span>
                 </div>
-                <span class="tier-cue">Hover, focus, or tap for fixture receipt</span>
+                <span class="tier-cue">Click or hover for fixture receipt</span>
               </div>
               <div class="tier-sticker" aria-label="Verified Tier 10 fixture receipt">
                 <span class="tier-sticker-head">tier 10 commitment fixture</span>
@@ -363,13 +442,16 @@ function buildForgeTx(utxos, tier) {
         </div>
       </section>
 
-      <!-- SECTION 4 (#proofs): SILVER-STONE GROUND — DUAL-AUDIENCE LIVE CASHVM REFUSAL LAB -->
-      <section class="band-light" id="proofs">
+      <!-- SECTION 4 (#proofs): ALGOLIA LIVE API & CASHVM REFUSAL PLAYGROUND -->
+      <section class="band-frost-alt" id="proofs">
         <div class="container">
           <div class="section-header-split">
-            <h2 class="section-heading">
-              Try breaking the rules.<br>Watch Bitcoin Cash refuse.
-            </h2>
+            <div>
+              <span class="section-eyebrow">Interactive verifier · POST /api/attack</span>
+              <h2 class="section-heading">
+                Try breaking the rules.<br>Watch Bitcoin Cash refuse.
+              </h2>
+            </div>
             <p class="section-lead">
               Select any cheat below. Our server constructs the forged transaction and runs it live via <code>POST /api/attack</code> against the compiled <code>BlazeForge.cash</code> covenant.
             </p>
@@ -378,6 +460,7 @@ function buildForgeTx(utxos, tier) {
           <div class="proof-grid">
             <div class="attack-selector-list" role="group" aria-label="Adversarial exploit vectors">
               <button type="button" class="attack-btn is-selected" data-attack="under-count-4" aria-pressed="true">
+                <span class="attack-index">01</span>
                 <div class="attack-btn-text">
                   <span class="attack-btn-label">Forge with only 4 stamps</span>
                   <span class="attack-btn-sub">Tries to mint a 5-stamp medallion with one badge short</span>
@@ -386,6 +469,7 @@ function buildForgeTx(utxos, tier) {
               </button>
 
               <button type="button" class="attack-btn" data-attack="duplicate-slot" aria-pressed="false">
+                <span class="attack-index">02</span>
                 <div class="attack-btn-text">
                   <span class="attack-btn-label">Reuse duplicate Stamp #1</span>
                   <span class="attack-btn-sub">Submits copies of the same stamp five times instead of 5 unique ones</span>
@@ -394,6 +478,7 @@ function buildForgeTx(utxos, tier) {
               </button>
 
               <button type="button" class="attack-btn" data-attack="fake-category" aria-pressed="false">
+                <span class="attack-index">03</span>
                 <div class="attack-btn-text">
                   <span class="attack-btn-label">Inject unregistered token category</span>
                   <span class="attack-btn-sub">Substitutes a homemade fake CashToken for an official event badge</span>
@@ -402,6 +487,7 @@ function buildForgeTx(utxos, tier) {
               </button>
 
               <button type="button" class="attack-btn" data-attack="anti-burn-keep-stamps" aria-pressed="false">
+                <span class="attack-index">04</span>
                 <div class="attack-btn-text">
                   <span class="attack-btn-label">Keep Stamp #5 in change output</span>
                   <span class="attack-btn-sub">Tries to refund a stamp to the user after minting instead of burning it</span>
@@ -410,6 +496,7 @@ function buildForgeTx(utxos, tier) {
               </button>
 
               <button type="button" class="attack-btn" data-attack="steal-baton" aria-pressed="false">
+                <span class="attack-index">05</span>
                 <div class="attack-btn-text">
                   <span class="attack-btn-label">Redirect Minting Baton to attacker</span>
                   <span class="attack-btn-sub">Attempts to steal the contract's trophy-minting key to a private wallet</span>
@@ -419,6 +506,10 @@ function buildForgeTx(utxos, tier) {
             </div>
 
             <div class="proof-receipt-panel" id="proof-receipt-panel" aria-live="polite">
+              <div class="terminal-chrome">
+                <span class="win-dots"><i></i><i></i><i></i></span>
+                <span class="terminal-endpoint">POST /api/attack · CashVM Interpreter</span>
+              </div>
               <div class="receipt-top-row">
                 <span class="receipt-status" id="receipt-status">rejected at line 19</span>
                 <div class="receipt-top-meta">
@@ -441,14 +532,17 @@ Failing statement: require(tier == 5 || tier == 9 || tier == 10);</pre>
 
   <footer class="site-footer">
     <div class="container">
-      <div class="footer-inner">
-        <div>
-          <h2 class="footer-title">Claim five stamps.<br>Forge your trophy in zero blocks.</h2>
-          <p class="footer-sub">Open the clean Forge workspace to claim Demo Stamps, run verified loop mints, and inspect mempool baton chaining live.</p>
-        </div>
-        <div class="footer-actions">
-          <a href="/dashboard" class="footer-btn-primary">open forge dashboard</a>
-          <a href="#hero-stage" class="footer-link-quiet">back to top</a>
+      <div class="footer-cta-card">
+        <div class="footer-inner">
+          <div>
+            <span class="section-eyebrow eyebrow-on-dark">Interactive sandbox &amp; live Chipnet</span>
+            <h2 class="footer-title">Claim five stamps.<br>Forge your trophy in zero blocks.</h2>
+            <p class="footer-sub">Open the clean Forge workspace to claim Demo Stamps, pair WizardConnect, run verified loop mints, and inspect mempool baton chaining live.</p>
+          </div>
+          <div class="footer-actions">
+            <a href="/dashboard" class="footer-btn-primary">Open Forge Workspace</a>
+            <a href="#hero-stage" class="footer-link-quiet">Back to top</a>
+          </div>
         </div>
       </div>
       <div class="footer-colophon">

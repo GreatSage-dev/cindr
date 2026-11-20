@@ -410,34 +410,34 @@ function initIrisScene({ onMorphChange }) {
         float morphFade = 1.0 - smoothstep(0.28, 0.64, vMorph);
 
         if (vCapR < 0.0) {
-          // Dark smoky glass shaft (espresso core -> cool smoky charcoal-olive for outer cables)
-          vec3 darkEspresso = vec3(0.085, 0.062, 0.042);
-          vec3 smokyOlive = vec3(0.16, 0.175, 0.165);
-          vec3 shaftBase = mix(darkEspresso, smokyOlive, vTone);
+          // Deep Xenon slate-navy glass shaft -> cool periwinkle slate for outer cables
+          vec3 darkXenon = vec3(0.11, 0.13, 0.25);
+          vec3 smokySlate = vec3(0.22, 0.24, 0.39);
+          vec3 shaftBase = mix(darkXenon, smokySlate, vTone);
 
-          // Studio silver-grey reflection on cylindrical glass edge so each tube reads crisp in 3D
-          vec3 studioRimColor = vec3(0.70, 0.71, 0.70);
-          vec3 body = shaftBase + studioRimColor * (fresnel * 0.42 + spec * 0.34 + rimDiffuse * 0.09);
+          // Studio periwinkle-silver reflection on cylindrical glass edge
+          vec3 studioRimColor = vec3(0.76, 0.81, 0.96);
+          vec3 body = shaftBase + studioRimColor * (fresnel * 0.45 + spec * 0.38 + rimDiffuse * 0.12);
 
-          // Warm subsurface amber bleed concentrated on final 24% approaching glowing tip
+          // Xenon electric-blue subsurface bleed concentrated on final 24% approaching glowing tip
           float tipHeat = smoothstep(0.75, 0.995, vT);
-          vec3 amberBleed = mix(vec3(0.58, 0.28, 0.03), vec3(0.98, 0.76, 0.18), smoothstep(0.87, 1.0, vT));
-          body = mix(body, amberBleed, tipHeat * (0.72 + 0.28 * (1.0 - fresnel)));
+          vec3 xenonBleed = mix(vec3(0.05, 0.24, 0.86), vec3(0.32, 0.56, 1.0), smoothstep(0.87, 1.0, vT));
+          body = mix(body, xenonBleed, tipHeat * (0.76 + 0.24 * (1.0 - fresnel)));
 
-          // Top-left atmospheric dissolve into studio silver-grey fog
+          // Top-left atmospheric dissolve into studio frost ground
           float rootFade = smoothstep(0.0, 0.22, vT);
           gl_FragColor = vec4(body, rootFade * morphFade);
         } else {
-          // Circular glowing yellow-cream to warm amber glass end-cap face
-          vec3 creamHot = vec3(1.0, 0.975, 0.78);
-          vec3 sunlitGold = vec3(0.99, 0.80, 0.18);
-          vec3 amberBevel = vec3(0.78, 0.41, 0.04);
+          // Circular glowing ice-white to Xenon electric-blue glass end-cap face
+          vec3 iceHot = vec3(0.95, 0.98, 1.0);
+          vec3 xenonGlow = vec3(0.27, 0.52, 1.0);
+          vec3 nebulaBevel = vec3(0.04, 0.22, 0.82);
 
           float coreMix = smoothstep(0.0, 0.68, vCapR);
           float rimMix = smoothstep(0.64, 1.0, vCapR);
-          vec3 faceColor = mix(creamHot, sunlitGold, coreMix * (0.78 + vSeed * 0.22));
-          faceColor = mix(faceColor, amberBevel, rimMix * 0.78);
-          faceColor += vec3(0.14, 0.11, 0.04) * spec;
+          vec3 faceColor = mix(iceHot, xenonGlow, coreMix * (0.76 + vSeed * 0.24));
+          faceColor = mix(faceColor, nebulaBevel, rimMix * 0.78);
+          faceColor += vec3(0.12, 0.16, 0.22) * spec;
 
           gl_FragColor = vec4(faceColor, morphFade);
         }
@@ -631,23 +631,22 @@ function initIrisScene({ onMorphChange }) {
         float radial = clamp(1.0 - abs(vSide), 0.0, 1.0);
         float edgeAlpha = smoothstep(0.0, 0.42, radial);
 
-        // Back layers: roasted bronze shadows; Front layers: sunlit honey/champagne-gold highlights
-        // Roots stay soft medium silver-bronze so no pale halo ring appears around the pupil
-        vec3 backRoot = vec3(0.62, 0.56, 0.48);
-        vec3 backMid = vec3(0.45, 0.23, 0.07);
-        vec3 backTip = vec3(0.84, 0.54, 0.16);
+        // Back layers: deep slate indigo; Front layers: Nebula Indigo & electric cyan highlights
+        vec3 backRoot = vec3(0.48, 0.52, 0.68);
+        vec3 backMid = vec3(0.14, 0.22, 0.56);
+        vec3 backTip = vec3(0.32, 0.44, 0.96);
         vec3 backCol = mix(backRoot, backMid, smoothstep(0.14, 0.48, vT));
         backCol = mix(backCol, backTip, smoothstep(0.48, 0.92, vT));
 
-        vec3 frontRoot = vec3(0.74, 0.66, 0.52);
-        vec3 frontMid = vec3(0.90, 0.63, 0.19);
-        vec3 frontTip = vec3(0.99, 0.86, 0.48);
+        vec3 frontRoot = vec3(0.66, 0.72, 0.88);
+        vec3 frontMid = vec3(0.16, 0.42, 1.0);
+        vec3 frontTip = vec3(0.62, 0.84, 1.0);
         vec3 frontCol = mix(frontRoot, frontMid, smoothstep(0.14, 0.48, vT));
         frontCol = mix(frontCol, frontTip, smoothstep(0.50, 0.95, vT));
 
         float depthMix = smoothstep(0.32, 0.66, vLayer);
         vec3 color = mix(backCol, frontCol, depthMix);
-        color += vec3(0.08, 0.06, 0.03) * pow(radial, 3.0) * smoothstep(0.25, 0.85, vT);
+        color += vec3(0.05, 0.08, 0.14) * pow(radial, 3.0) * smoothstep(0.25, 0.85, vT);
 
         float rootFade = smoothstep(0.06, 0.34, vT);
         float tipFade = 1.0 - smoothstep(0.95, 1.0, vT) * 0.25;
@@ -774,7 +773,7 @@ function initIrisScene({ onMorphChange }) {
       void main() {
         float d = length(gl_PointCoord - vec2(0.5));
         float halo = pow(smoothstep(0.5, 0.0, d), 2.4);
-        gl_FragColor = vec4(0.98, 0.72, 0.16, halo * vAlpha);
+        gl_FragColor = vec4(0.27, 0.48, 1.0, halo * vAlpha);
       }
     `,
   });
@@ -844,13 +843,13 @@ function initIrisScene({ onMorphChange }) {
       void main() {
         float d = length(gl_PointCoord - vec2(0.5));
         if (vKind > 0.5) {
-          // Crisp hollow micro-bokeh ring
+          // Crisp hollow micro-bokeh ring (Nebula Indigo / Periwinkle)
           float ring = smoothstep(0.46, 0.38, d) * smoothstep(0.24, 0.32, d);
-          gl_FragColor = vec4(0.99, 0.85, 0.38, ring * vAlpha * 0.75);
+          gl_FragColor = vec4(0.38, 0.54, 1.0, ring * vAlpha * 0.72);
         } else {
-          // Pinpoint warm golden-cream bokeh dot
+          // Pinpoint Xenon ice-cyan bokeh dot
           float dotMask = smoothstep(0.44, 0.12, d);
-          vec3 col = mix(vec3(0.98, 0.78, 0.24), vec3(1.0, 0.98, 0.85), smoothstep(0.25, 0.0, d));
+          vec3 col = mix(vec3(0.28, 0.48, 1.0), vec3(0.92, 0.96, 1.0), smoothstep(0.25, 0.0, d));
           gl_FragColor = vec4(col, dotMask * vAlpha * 0.85);
         }
       }

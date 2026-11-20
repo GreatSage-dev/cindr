@@ -1,13 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-type="software">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="page-type" content="software">
+  <meta name="site-kind" content="software">
   <title>Forge Workspace — cindr</title>
   <meta name="description" content="Clean CashTokens workspace to claim Demo Stamps, forge Trophy NFTs in zero blocks, verify CashVM attack refusals, and inspect mempool batons.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/dashboard.css">
 </head>
 <body>
@@ -19,8 +21,8 @@
       <div class="topbar-brand">
         <a href="/dashboard" class="brand-lockup">
           <svg class="brand-mark-svg" width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-            <polygon points="9,1.5 16,5.5 16,12.5 9,16.5 2,12.5 2,5.5" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-            <circle cx="9" cy="9" r="2.5" fill="var(--accent)"/>
+            <polygon points="9,1.5 16,5.5 16,12.5 9,16.5 2,12.5 2,5.5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+            <circle cx="9" cy="9" r="2.6" fill="var(--xenon-600)"/>
           </svg>
           <span class="brand-name">cindr</span>
         </a>
@@ -45,7 +47,7 @@
           >
             <span class="wallet-trigger-label" id="wallet-trigger-label">Loading wallet…</span>
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-              <path d="M3.5 5.25L7 8.75L10.5 5.25" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M3.5 5.25L7 8.75L10.5 5.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
 
@@ -115,11 +117,16 @@
   </header>
 
   <main class="workspace-container" id="workspace-main">
-    <!-- PAGE HEADER: NOUN TITLE + ONE CONTEXTUAL PRIMARY ACTION -->
+    <!-- PAGE HEADER + GUIDED 3-STEP ONBOARDING STRIP -->
     <section class="page-head" aria-label="Workspace summary">
       <div class="page-head-copy">
         <h1 class="page-title">Forge workspace</h1>
         <p class="page-subline" id="workspace-finding">Checking wallet stamps against compiled CashVM covenant…</p>
+        <ol class="onboarding-steps" aria-label="How to test cindr in 3 steps">
+          <li class="onboard-pill"><span class="onboard-idx">1</span>Claim 5 demo stamps</li>
+          <li class="onboard-pill"><span class="onboard-idx">2</span>Burn &amp; forge trophy (0-conf)</li>
+          <li class="onboard-pill"><span class="onboard-idx">3</span>Inspect receipt or test attacks</li>
+        </ol>
       </div>
       <div class="page-head-action">
         <button type="button" class="btn-primary" id="btn-header-primary" disabled>
@@ -128,7 +135,7 @@
       </div>
     </section>
 
-    <!-- RELATION-BASED UNDERLINE TABS -->
+    <!-- ALGOLIA SEGMENTED PILL NAVIGATION -->
     <div class="tab-bar" role="tablist" aria-label="Workspace views">
       <button
         type="button"
@@ -139,7 +146,8 @@
         aria-controls="panel-forge"
         data-tab="forge"
       >
-        Forge
+        <span class="tab-step-dot">1</span>
+        Forge &amp; Claim
       </button>
       <button
         type="button"
@@ -151,7 +159,8 @@
         data-tab="proofs"
         tabindex="-1"
       >
-        Proofs &amp; attacks
+        <span class="tab-step-dot">2</span>
+        Proofs &amp; Attacks
       </button>
       <button
         type="button"
@@ -163,13 +172,14 @@
         data-tab="network"
         tabindex="-1"
       >
-        Network &amp; registry
+        <span class="tab-step-dot">3</span>
+        Network &amp; Registry
       </button>
     </div>
 
     <!-- TAB 1: FORGE (STAMPS, TIER, RECEIPT & ACTIVITY) -->
     <section id="panel-forge" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-forge">
-      <!-- Single Divided Status Strip -->
+      <!-- Crisp 3-Metric Modular KPI Cards -->
       <div class="status-strip" aria-label="Wallet metrics">
         <div class="status-cell">
           <span class="status-label">Held stamps</span>
@@ -181,12 +191,12 @@
         </div>
         <div class="status-cell">
           <span class="status-label">Baton latency</span>
-          <span class="status-value num" id="kpi-latency">0 blocks</span>
+          <span class="status-value num status-accent" id="kpi-latency">0 blocks</span>
         </div>
       </div>
 
       <div class="forge-grid">
-        <!-- Left Panel: Stamp Slots & Tier Selection -->
+        <!-- Left Card: Stamp Slots & Tier Selection -->
         <section class="panel" aria-label="Stamp slots and tier">
           <div class="panel-header">
             <div>
@@ -218,12 +228,12 @@
             Demo Stamps fill slots 10–14 immediately with zero confirmation wait.
           </p>
 
-          <!-- Dropdown / Disclosure for bulky UTXO table -->
+          <!-- Collapsible UTXO Inspector keeps workspace serene -->
           <details class="disclosure" id="disclosure-utxos">
             <summary class="disclosure-summary">
               <span id="utxo-disclosure-label">Inspect stamp &amp; BCH UTXOs (0)</span>
               <svg class="disclosure-chevron" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                <path d="M3.5 5.25L7 8.75L10.5 5.25" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M3.5 5.25L7 8.75L10.5 5.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </summary>
             <div class="disclosure-body" id="utxo-inspector-body">
@@ -232,8 +242,8 @@
           </details>
         </section>
 
-        <!-- Right Panel: Latest Transaction Receipt -->
-        <section class="panel" aria-label="Transaction receipt" aria-live="polite">
+        <!-- Right Card: Algolia-Styled API Response & Transaction Receipt -->
+        <section class="panel panel-receipt-shell" aria-label="Transaction receipt" aria-live="polite">
           <div class="panel-header">
             <div>
               <h2 class="panel-title">Transaction receipt</h2>
@@ -281,12 +291,11 @@
               </div>
             </div>
 
-            <!-- Dropdown / Disclosure for bulky baton outpoints, commitments & raw txHex -->
             <details class="disclosure" id="disclosure-receipt-tech">
               <summary class="disclosure-summary">
                 <span>Technical receipt &amp; raw hex</span>
                 <svg class="disclosure-chevron" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                  <path d="M3.5 5.25L7 8.75L10.5 5.25" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M3.5 5.25L7 8.75L10.5 5.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </summary>
               <div class="disclosure-body tech-stack">
@@ -315,7 +324,7 @@
         </section>
       </div>
 
-      <!-- Bottom Section: Clean Ruled Session Activity + Trophies Held -->
+      <!-- Bottom Section: Trophies Held + Session Activity -->
       <div class="forge-bottom-grid">
         <section class="panel" aria-label="Trophies held">
           <div class="panel-header">
@@ -388,7 +397,7 @@
           </div>
         </div>
 
-        <div class="panel" id="dash-attack-panel" aria-live="polite">
+        <div class="panel panel-terminal" id="dash-attack-panel" aria-live="polite">
           <div class="panel-header">
             <div>
               <h2 class="panel-title">CashVM verdict</h2>
@@ -415,7 +424,7 @@
             <summary class="disclosure-summary">
               <span>Raw CashVM stack error trace</span>
               <svg class="disclosure-chevron" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                <path d="M3.5 5.25L7 8.75L10.5 5.25" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M3.5 5.25L7 8.75L10.5 5.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </summary>
             <div class="disclosure-body">
