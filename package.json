@@ -1,14 +1,16 @@
 {
   "name": "cindr",
   "version": "0.1.0",
-  "description": "cindr: CashTokens Burn-to-Mint May 2026 Layla-loop Covenant & 0-Conf Quest Protocol for BCH BLAZE 2026",
+  "description": "cindr: CashTokens burn-to-mint May 2026 Layla-loop covenant and 0-conf trophy protocol on Bitcoin Cash",
   "type": "module",
   "license": "MIT",
   "scripts": {
     "prestart": "npm run build",
     "start": "node dist/src/server.js",
     "dev": "tsx src/server.ts",
-    "build": "tsc",
+    "sync:vendor": "node scripts/sync-vendor.mjs",
+    "build": "node scripts/sync-vendor.mjs && tsc",
+    "lint:js": "node --check public/app.js && node --check public/dashboard.js && node --check scripts/sync-vendor.mjs && node --check scripts/plain-words-check.mjs",
     "verify": "vitest run",
     "smoke": "tsx scripts/smoke.ts",
     "check:words": "node scripts/plain-words-check.mjs",
@@ -28,6 +30,6 @@
     "esbuild": "^0.28.2",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0",
-    "vitest": "^3.0.0"
+    "vitest": "^5.1.1"
   }
 }

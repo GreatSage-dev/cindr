@@ -5,19 +5,19 @@ document.documentElement.classList.add('js-motion');
 const HERO_STATES = [
   {
     key: 'a',
-    counter: '[ 001 / 002 ]',
-    edgeTag: '[ 00.00 ]',
+    counter: '001 / 002',
+    edgeTag: '00.00',
     headline:
-      '<span class="hl-line hl-indent-1">FIVE LOOSE</span><span class="hl-line">STAMPS</span><span class="hl-line hl-italic">into</span><span class="hl-line hl-indent-2">// ONE FORGED</span><span class="hl-line hl-indent-3">TROPHY</span>',
-    lead: 'Burn 5, 9, or 10 TokenHunt CashTokens in one Layla loop transaction to mint a verified Trophy NFT without block delays.',
+      '<span class="hl-line hl-indent-1">5 Loose</span><span class="hl-line">Stamps</span><span class="hl-line hl-italic">into</span><span class="hl-line hl-indent-2">1 cindr</span><span class="hl-line hl-indent-3">Trophy</span>',
+    lead: 'Burn 5, 9, or 10 TokenHunt CashTokens in 1 Layla loop transaction to mint a verified Trophy NFT with 0 block delay.',
   },
   {
     key: 'b',
-    counter: '[ 002 / 002 ]',
-    edgeTag: '[ 01.00 ]',
+    counter: '002 / 002',
+    edgeTag: '01.00',
     headline:
-      '<span class="hl-line hl-indent-1">BURN FIVE</span><span class="hl-line">IN ONE LOOP</span><span class="hl-line hl-italic">with</span><span class="hl-line hl-indent-2">// ZERO BLOCK</span><span class="hl-line hl-indent-3">DELAY</span>',
-    lead: 'Output 0 keeps the minting baton warm in mempool while Output 2 enforces zero remaining stamp tokens at consensus level.',
+      '<span class="hl-line hl-indent-1">Burn 5</span><span class="hl-line">in 1 Loop</span><span class="hl-line hl-italic">with</span><span class="hl-line hl-indent-2">0 Block</span><span class="hl-line hl-indent-3">Delay</span>',
+    lead: 'Output 0 keeps the minting baton warm in mempool while Output 2 enforces 0 remaining stamp tokens at consensus level.',
   },
 ];
 
@@ -410,34 +410,34 @@ function initIrisScene({ onMorphChange }) {
         float morphFade = 1.0 - smoothstep(0.28, 0.64, vMorph);
 
         if (vCapR < 0.0) {
-          // Deep Xenon slate-navy glass shaft -> cool periwinkle slate for outer cables
-          vec3 darkXenon = vec3(0.11, 0.13, 0.25);
-          vec3 smokySlate = vec3(0.22, 0.24, 0.39);
-          vec3 shaftBase = mix(darkXenon, smokySlate, vTone);
+          // Smoked graphite-slate glass shaft (90-95% neutral chrome)
+          vec3 darkGraphite = vec3(0.09, 0.095, 0.12);
+          vec3 smokySlate = vec3(0.20, 0.21, 0.25);
+          vec3 shaftBase = mix(darkGraphite, smokySlate, vTone);
 
-          // Studio periwinkle-silver reflection on cylindrical glass edge
-          vec3 studioRimColor = vec3(0.76, 0.81, 0.96);
-          vec3 body = shaftBase + studioRimColor * (fresnel * 0.45 + spec * 0.38 + rimDiffuse * 0.12);
+          // Cool silver studio rim reflection on cylindrical glass edge
+          vec3 studioRimColor = vec3(0.84, 0.86, 0.90);
+          vec3 body = shaftBase + studioRimColor * (fresnel * 0.42 + spec * 0.36 + rimDiffuse * 0.12);
 
-          // Xenon electric-blue subsurface bleed concentrated on final 24% approaching glowing tip
-          float tipHeat = smoothstep(0.75, 0.995, vT);
-          vec3 xenonBleed = mix(vec3(0.05, 0.24, 0.86), vec3(0.32, 0.56, 1.0), smoothstep(0.87, 1.0, vT));
-          body = mix(body, xenonBleed, tipHeat * (0.76 + 0.24 * (1.0 - fresnel)));
+          // Restrained #003DFF Xenon tip trace focused strictly at final 10%
+          float tipHeat = smoothstep(0.90, 1.0, vT);
+          vec3 xenonBleed = mix(vec3(0.0, 0.24, 1.0), vec3(0.28, 0.46, 1.0), smoothstep(0.94, 1.0, vT));
+          body = mix(body, xenonBleed, tipHeat * (0.72 + 0.28 * (1.0 - fresnel)));
 
           // Top-left atmospheric dissolve into studio frost ground
           float rootFade = smoothstep(0.0, 0.22, vT);
           gl_FragColor = vec4(body, rootFade * morphFade);
         } else {
-          // Circular glowing ice-white to Xenon electric-blue glass end-cap face
-          vec3 iceHot = vec3(0.95, 0.98, 1.0);
-          vec3 xenonGlow = vec3(0.27, 0.52, 1.0);
-          vec3 nebulaBevel = vec3(0.04, 0.22, 0.82);
+          // Circular silver-core to Xenon electric-blue glass end-cap face
+          vec3 iceHot = vec3(0.95, 0.96, 0.98);
+          vec3 xenonGlow = vec3(0.0, 0.24, 1.0);
+          vec3 graphiteBevel = vec3(0.11, 0.12, 0.16);
 
-          float coreMix = smoothstep(0.0, 0.68, vCapR);
-          float rimMix = smoothstep(0.64, 1.0, vCapR);
-          vec3 faceColor = mix(iceHot, xenonGlow, coreMix * (0.76 + vSeed * 0.24));
-          faceColor = mix(faceColor, nebulaBevel, rimMix * 0.78);
-          faceColor += vec3(0.12, 0.16, 0.22) * spec;
+          float coreMix = smoothstep(0.0, 0.72, vCapR);
+          float rimMix = smoothstep(0.68, 1.0, vCapR);
+          vec3 faceColor = mix(iceHot, xenonGlow, coreMix * (0.64 + vSeed * 0.26));
+          faceColor = mix(faceColor, graphiteBevel, rimMix * 0.82);
+          faceColor += vec3(0.12, 0.14, 0.18) * spec;
 
           gl_FragColor = vec4(faceColor, morphFade);
         }
@@ -631,22 +631,22 @@ function initIrisScene({ onMorphChange }) {
         float radial = clamp(1.0 - abs(vSide), 0.0, 1.0);
         float edgeAlpha = smoothstep(0.0, 0.42, radial);
 
-        // Back layers: deep slate indigo; Front layers: Nebula Indigo & electric cyan highlights
-        vec3 backRoot = vec3(0.48, 0.52, 0.68);
-        vec3 backMid = vec3(0.14, 0.22, 0.56);
-        vec3 backTip = vec3(0.32, 0.44, 0.96);
+        // Neutral smoked graphite-silver iris blades with crisp tip glints
+        vec3 backRoot = vec3(0.30, 0.32, 0.38);
+        vec3 backMid = vec3(0.14, 0.15, 0.20);
+        vec3 backTip = vec3(0.22, 0.25, 0.36);
         vec3 backCol = mix(backRoot, backMid, smoothstep(0.14, 0.48, vT));
-        backCol = mix(backCol, backTip, smoothstep(0.48, 0.92, vT));
+        backCol = mix(backCol, backTip, smoothstep(0.58, 0.96, vT));
 
-        vec3 frontRoot = vec3(0.66, 0.72, 0.88);
-        vec3 frontMid = vec3(0.16, 0.42, 1.0);
-        vec3 frontTip = vec3(0.62, 0.84, 1.0);
-        vec3 frontCol = mix(frontRoot, frontMid, smoothstep(0.14, 0.48, vT));
-        frontCol = mix(frontCol, frontTip, smoothstep(0.50, 0.95, vT));
+        vec3 frontRoot = vec3(0.56, 0.58, 0.66);
+        vec3 frontMid = vec3(0.26, 0.28, 0.36);
+        vec3 frontTip = vec3(0.0, 0.24, 1.0);
+        vec3 frontCol = mix(frontRoot, frontMid, smoothstep(0.14, 0.54, vT));
+        frontCol = mix(frontCol, frontTip, smoothstep(0.76, 0.98, vT));
 
         float depthMix = smoothstep(0.32, 0.66, vLayer);
         vec3 color = mix(backCol, frontCol, depthMix);
-        color += vec3(0.05, 0.08, 0.14) * pow(radial, 3.0) * smoothstep(0.25, 0.85, vT);
+        color += vec3(0.06, 0.07, 0.09) * pow(radial, 3.0) * smoothstep(0.25, 0.85, vT);
 
         float rootFade = smoothstep(0.06, 0.34, vT);
         float tipFade = 1.0 - smoothstep(0.95, 1.0, vT) * 0.25;
@@ -772,8 +772,8 @@ function initIrisScene({ onMorphChange }) {
       varying float vAlpha;
       void main() {
         float d = length(gl_PointCoord - vec2(0.5));
-        float halo = pow(smoothstep(0.5, 0.0, d), 2.4);
-        gl_FragColor = vec4(0.27, 0.48, 1.0, halo * vAlpha);
+        float halo = pow(smoothstep(0.5, 0.0, d), 2.6);
+        gl_FragColor = vec4(0.0, 0.24, 1.0, halo * vAlpha * 0.72);
       }
     `,
   });
@@ -843,14 +843,14 @@ function initIrisScene({ onMorphChange }) {
       void main() {
         float d = length(gl_PointCoord - vec2(0.5));
         if (vKind > 0.5) {
-          // Crisp hollow micro-bokeh ring (Nebula Indigo / Periwinkle)
+          // Subtle silver-slate hollow micro-ring
           float ring = smoothstep(0.46, 0.38, d) * smoothstep(0.24, 0.32, d);
-          gl_FragColor = vec4(0.38, 0.54, 1.0, ring * vAlpha * 0.72);
+          gl_FragColor = vec4(0.52, 0.55, 0.64, ring * vAlpha * 0.54);
         } else {
-          // Pinpoint Xenon ice-cyan bokeh dot
+          // Neutral studio silver bokeh dot
           float dotMask = smoothstep(0.44, 0.12, d);
-          vec3 col = mix(vec3(0.28, 0.48, 1.0), vec3(0.92, 0.96, 1.0), smoothstep(0.25, 0.0, d));
-          gl_FragColor = vec4(col, dotMask * vAlpha * 0.85);
+          vec3 col = mix(vec3(0.68, 0.72, 0.80), vec3(0.95, 0.96, 0.98), smoothstep(0.25, 0.0, d));
+          gl_FragColor = vec4(col, dotMask * vAlpha * 0.72);
         }
       }
     `,
@@ -869,9 +869,11 @@ function initIrisScene({ onMorphChange }) {
     const width = Math.max(1, Math.floor(rect.width));
     const height = Math.max(1, Math.floor(rect.height));
     const aspect = width / height;
+    const isMobileViewport = window.innerWidth <= 768;
     renderer.setSize(width, height, false);
     camera.aspect = aspect;
-    camera.position.z = window.innerWidth <= 900 ? 6.8 : aspect < 0.9 ? 7.2 : 5.4;
+    camera.position.z = isMobileViewport ? 7.3 : aspect < 0.9 ? 7.2 : 5.4;
+    rootGroup.position.set(isMobileViewport ? 0.56 : 0, isMobileViewport ? 0.42 : 0, 0);
     camera.updateProjectionMatrix();
   }
 
@@ -887,9 +889,12 @@ function initIrisScene({ onMorphChange }) {
   let currentMouseY = 0;
 
   let isHeroVisible = true;
+  let isManualPaused = REDUCED_MOTION;
   let rafId = 0;
+  let scrollRafPending = false;
   let lastStateIndex = 0;
-  const clockStart = performance.now();
+  let animElapsed = 0;
+  let lastTickNow = performance.now();
 
   const canHoverFine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
   if (canHoverFine && !REDUCED_MOTION) {
@@ -909,8 +914,7 @@ function initIrisScene({ onMorphChange }) {
       targetMorph = manualOverride;
       return;
     }
-    if (REDUCED_MOTION) {
-      targetMorph = 0;
+    if (REDUCED_MOTION || isManualPaused) {
       return;
     }
     const stageHeight = heroStage.offsetHeight;
@@ -922,21 +926,42 @@ function initIrisScene({ onMorphChange }) {
   }
 
   window.addEventListener('scroll', () => {
-    // Releasing manual toggle once user actively scrolls back past a threshold
-    if (manualOverride !== null && window.scrollY > 40) {
-      manualOverride = null;
-    }
-    updateScrollTarget();
+    if (scrollRafPending) return;
+    scrollRafPending = true;
+    requestAnimationFrame(() => {
+      scrollRafPending = false;
+      // Releasing manual toggle once user actively scrolls back past a threshold
+      if (manualOverride !== null && window.scrollY > 40) {
+        manualOverride = null;
+      }
+      updateScrollTarget();
+    });
   }, { passive: true });
 
+  function renderInstantFrame() {
+    sharedUniforms.uTime.value = REDUCED_MOTION ? 0 : animElapsed;
+    currentMorph = targetMorph;
+    sharedUniforms.uMorph.value = currentMorph;
+    rodMaterial.depthWrite = currentMorph < 0.25;
+    rodMesh.visible = currentMorph < 0.68;
+    irisMesh.visible = currentMorph > 0.12;
+    rayMesh.visible = currentMorph > 0.55;
+    tipGlowMesh.visible = currentMorph < 0.62;
+    renderer.render(scene, camera);
+  }
+
   function tick(now) {
-    if (!isHeroVisible) {
+    if (!isHeroVisible || isManualPaused) {
       rafId = 0;
       return;
     }
 
-    const elapsed = (now - clockStart) * 0.001;
-    sharedUniforms.uTime.value = REDUCED_MOTION ? 0 : elapsed;
+    const dt = Math.min(0.1, Math.max(0, (now - lastTickNow) * 0.001));
+    lastTickNow = now;
+    if (!REDUCED_MOTION) {
+      animElapsed += dt;
+    }
+    sharedUniforms.uTime.value = REDUCED_MOTION ? 0 : animElapsed;
 
     // Damped spring smoothing toward target morph & pointer tilt
     currentMorph += (targetMorph - currentMorph) * (REDUCED_MOTION ? 1 : 0.09);
@@ -964,7 +989,12 @@ function initIrisScene({ onMorphChange }) {
   }
 
   function startLoop() {
+    if (isManualPaused) {
+      renderInstantFrame();
+      return;
+    }
     if (!rafId && isHeroVisible) {
+      lastTickNow = performance.now();
       rafId = requestAnimationFrame(tick);
     }
   }
@@ -975,7 +1005,7 @@ function initIrisScene({ onMorphChange }) {
       (entries) => {
         const entry = entries[0];
         isHeroVisible = entry.isIntersecting;
-        if (isHeroVisible) {
+        if (isHeroVisible && !isManualPaused) {
           startLoop();
         } else if (rafId) {
           cancelAnimationFrame(rafId);
@@ -994,17 +1024,26 @@ function initIrisScene({ onMorphChange }) {
     setManualState(stateIdx) {
       manualOverride = stateIdx === 1 ? 1 : 0;
       targetMorph = manualOverride;
-      if (REDUCED_MOTION) {
-        currentMorph = targetMorph;
-        sharedUniforms.uMorph.value = currentMorph;
-        rodMaterial.depthWrite = currentMorph < 0.25;
-        rodMesh.visible = currentMorph < 0.68;
-        irisMesh.visible = currentMorph > 0.12;
-        rayMesh.visible = currentMorph > 0.55;
-        tipGlowMesh.visible = currentMorph < 0.62;
-        renderer.render(scene, camera);
+      if (REDUCED_MOTION || isManualPaused) {
+        renderInstantFrame();
       }
       onMorphChange(stateIdx);
+    },
+    setPaused(paused) {
+      isManualPaused = Boolean(paused);
+      if (isManualPaused) {
+        if (rafId) {
+          cancelAnimationFrame(rafId);
+          rafId = 0;
+        }
+        renderInstantFrame();
+      } else {
+        updateScrollTarget();
+        startLoop();
+      }
+    },
+    isPaused() {
+      return isManualPaused;
     },
   };
 }
@@ -1058,6 +1097,21 @@ function initHeroStateUI() {
   }
 
   const sceneController = initIrisScene({ onMorphChange: applyState });
+  const btnMotion = document.getElementById('btn-toggle-motion');
+
+  if (btnMotion) {
+    const syncMotionButton = (paused) => {
+      btnMotion.setAttribute('aria-pressed', String(paused));
+      btnMotion.textContent = paused ? 'Resume motion' : 'Pause motion';
+    };
+    syncMotionButton(sceneController ? sceneController.isPaused() : REDUCED_MOTION);
+    btnMotion.addEventListener('click', () => {
+      if (!sceneController) return;
+      const nextPaused = !sceneController.isPaused();
+      sceneController.setPaused(nextPaused);
+      syncMotionButton(nextPaused);
+    });
+  }
 
   btnA?.addEventListener('click', () => {
     if (sceneController) sceneController.setManualState(0);
@@ -1080,28 +1134,26 @@ function initHeroStateUI() {
  * Downstream scrollytelling choreography (staggered card pops + vertical metric slot reels).
  */
 function bindTierCardToggles() {
-  const tierCards = document.querySelectorAll('.tier-card');
+  const tierButtons = document.querySelectorAll('.tier-receipt-btn');
 
-  function toggleCard(targetCard) {
+  function toggleCard(targetBtn) {
+    const targetCard = targetBtn.closest('.tier-card');
+    if (!targetCard) return;
     const wasOpen = targetCard.classList.contains('is-sticker-open');
-    tierCards.forEach((c) => {
-      c.classList.remove('is-sticker-open');
-      c.setAttribute('aria-expanded', 'false');
+    tierButtons.forEach((btn) => {
+      btn.setAttribute('aria-expanded', 'false');
+      btn.textContent = 'Inspect fixture receipt';
+      btn.closest('.tier-card')?.classList.remove('is-sticker-open');
     });
     if (!wasOpen) {
       targetCard.classList.add('is-sticker-open');
-      targetCard.setAttribute('aria-expanded', 'true');
+      targetBtn.setAttribute('aria-expanded', 'true');
+      targetBtn.textContent = 'Hide fixture receipt';
     }
   }
 
-  tierCards.forEach((card) => {
-    card.addEventListener('click', () => toggleCard(card));
-    card.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        toggleCard(card);
-      }
-    });
+  tierButtons.forEach((btn) => {
+    btn.addEventListener('click', () => toggleCard(btn));
   });
 }
 
@@ -1145,7 +1197,7 @@ const ATTACK_PLAIN_VERDICTS = {
   'anti-burn-keep-stamps':
     'Blocked — Output 2 must stay completely empty of tokens, proving spent stamps are burned forever.',
   'steal-baton':
-    'Blocked — Output 0 must return the minting baton back to the BlazeForge contract itself.',
+    'Blocked — Output 0 must return the minting baton back to the cindr contract itself.',
 };
 
 /**
@@ -1215,9 +1267,9 @@ function initBackendProofs() {
 
     if (retryBtn) retryBtn.hidden = true;
     if (vmOutputEl) vmOutputEl.classList.add('is-loading');
-    if (timingEl) timingEl.textContent = 'running cashvm...';
+    if (timingEl) timingEl.textContent = 'Running CashVM…';
     if (plainEl) {
-      plainEl.textContent = 'Running this forged transaction through Bitcoin Cash CashVM...';
+      plainEl.textContent = 'Running this invalid transaction through Bitcoin Cash CashVM…';
     }
 
     try {

@@ -22,9 +22,9 @@ export interface TokenHuntTierDef {
 }
 
 export const TROPHY_TIERS: readonly TokenHuntTierDef[] = [
-  { id: 'medallion', min: 5, name: 'BLAZE Medallion' },
-  { id: 'trophy', min: 9, name: 'BLAZE Trophy' },
-  { id: 'trailblazer-trophy', min: 10, name: 'Trailblazer Trophy' },
+  { id: 'medallion', min: 5, name: 'cindr Medallion' },
+  { id: 'trophy', min: 9, name: 'cindr Trophy' },
+  { id: 'trailblazer-trophy', min: 10, name: 'cindr Apex Trophy' },
 ] as const;
 
 /**
@@ -92,14 +92,14 @@ export const OFFICIAL_TOKENHUNT_CATALOG: readonly Omit<StampSlot, 'slot' | 'kind
   },
   {
     id: 'blaze-builder',
-    name: 'BLAZE Builder (Staging)',
+    name: 'cindr Builder (Staging)',
     category: '0909090909090909090909090909090909090909090909090909090909090909',
     commitmentRule: null,
     activationStatus: 'staging',
   },
   {
     id: 'trailblazer',
-    name: 'Trailblazer 2025',
+    name: 'Genesis 2025',
     category: 'cc080d0bf27a2b6c8d006a0f1f0c1695b485ed75caff5264b90c68e63f232ff4',
     commitmentRule: null,
     activationStatus: 'live',

@@ -110,6 +110,7 @@ export interface BuiltClaimTx {
   nextBatonUtxo: SpendableUtxo;
   expectedStampOutpoints: number[];
   estimatedFeeSats: bigint;
+  zeroConfChained: boolean;
 }
 
 export class ForgeValidationError extends Error {
@@ -381,11 +382,14 @@ function finalizeBuiltBatonTx(params: {
     params.batonKeepSats
   );
   if (params.includeUnconfirmed && params.recordInTracker !== false) {
-    params.tracker.record(
-      params.contractTokenAddress,
-      outpointKey(params.batonUtxo),
-      nextBatonUtxo
-    );
+    const spentOutpoint = outpointKey(params.batonUtxo);
+    const origSend = params.builder.send.bind(params.builder);
+    const wrappedSend = (async (raw?: true) => {
+      const sent = raw ? await origSend(true) : await origSend();
+      params.tracker.record(params.contractTokenAddress, spentOutpoint, nextBatonUtxo);
+      return sent;
+    }) as TransactionBuilder['send'];
+    params.builder.send = wrappedSend;
   }
   return { wcTransaction, txHex, txBytes, feeSats, nextBatonUtxo };
 }
@@ -437,7 +441,7 @@ export async function buildClaimDemoStampsTx(
   const tracker = options.batonTracker ?? defaultBatonTracker;
   const dispenser = instantiateDispenserContract(options.provider, options.demoCategory);
   const liveUtxos = await dispenser.getUtxos();
-  const { utxo: batonUtxo } = tracker.resolve(
+  const { utxo: batonUtxo, zeroConfChained } = tracker.resolve(
     dispenser.tokenAddress,
     liveUtxos,
     options.demoCategory,
@@ -518,6 +522,7 @@ export async function buildClaimDemoStampsTx(
     nextBatonUtxo,
     expectedStampOutpoints,
     estimatedFeeSats: feeSats,
+    zeroConfChained,
   };
 }
 
@@ -588,11 +593,17 @@ export async function buildForgeTx(
   const explicitFees = normalizeUtxoList(options.feeUtxos ?? []).filter(
     (u) => !u.token && !usedInputOutpoints.has(outpointKey(u))
   );
-  const minNeededFromUser = DUST_SATOSHIS + 4500n;
+  const estimatedFeeSats = BigInt(tier) * 650n + 2500n;
+  const minNeededFromUser = DUST_SATOSHIS + estimatedFeeSats;
   if (totalStampSats < minNeededFromUser) {
+    let addedFeeSats = 0n;
     for (const feeUtxo of explicitFees) {
       builder.addInput(feeUtxo, userUnlocker);
       inputPaths.push(feeUtxo.path);
+      addedFeeSats += feeUtxo.satoshis;
+      if (totalStampSats + addedFeeSats >= minNeededFromUser + 2000n) {
+        break;
+      }
     }
   }
 
@@ -626,7 +637,7 @@ export async function buildForgeTx(
 
   const { wcTransaction, txHex, txBytes, feeSats, nextBatonUtxo } = finalizeBuiltBatonTx({
     builder,
-    userPrompt: options.userPrompt ?? `Forge ${tierDef.name} NFT`,
+    userPrompt: options.userPrompt ?? `Mint ${tierDef.name} NFT`,
     contractTokenAddress: forge.tokenAddress,
     batonCategory: options.forgeCategory,
     batonUtxo,
@@ -729,7 +740,7 @@ export async function runAdversarialForgeAttack(
   let expectedRule = '';
 
   if (attack === 'under-count-4') {
-    label = 'Forge Medallion with only 4 Stamps';
+    label = 'Mint Medallion with only 4 Stamps';
     expectedRule = 'require(tier == 5 || tier == 9 || tier == 10)';
     const stamps4 = targetSlots.slice(0, 4).map(makeStampUtxo);
     const slotBytes = Uint8Array.from(targetSlots.slice(0, 4).map((s) => s.slot));
@@ -747,7 +758,7 @@ export async function runAdversarialForgeAttack(
     });
     builder.addBchChangeOutputIfNeeded({ to: attackerTokenAddr, feeRate: 1.5 });
   } else if (attack === 'duplicate-slot') {
-    label = 'Forge Medallion using Duplicate Copies of Stamp #1';
+    label = 'Mint Medallion using Duplicate Copies of Stamp #1';
     expectedRule = 'require(slot > prevSlot)';
     const dupStamps = [makeStampUtxo(targetSlots[0]), makeStampUtxo(targetSlots[0]), ...targetSlots.slice(1, 4).map(makeStampUtxo)];
     const dupSlotBytes = Uint8Array.from([targetSlots[0].slot, targetSlots[0].slot, targetSlots[1].slot, targetSlots[2].slot, targetSlots[3].slot]);
@@ -765,7 +776,7 @@ export async function runAdversarialForgeAttack(
     });
     builder.addBchChangeOutputIfNeeded({ to: attackerTokenAddr, feeRate: 1.5 });
   } else if (attack === 'fake-category') {
-    label = 'Forge Medallion with Unregistered Fake Token Category';
+    label = 'Mint Medallion with Unregistered Fake Token Category';
     expectedRule = 'require(actualCat == expectedCat)';
     const fakeCat = 'ff'.repeat(32);
     const valid4 = targetSlots.slice(0, 4).map(makeStampUtxo);
@@ -814,7 +825,7 @@ export async function runAdversarialForgeAttack(
       token: { category: targetSlots[4].category, amount: 0n, nft: { capability: 'none', commitment: '05' } },
     });
   } else {
-    label = 'Baton Hijack: Redirect Forge Minting Baton to Attacker Address';
+    label = 'Baton Hijack: Redirect cindr Minting Baton to Attacker Address';
     expectedRule = 'require(tx.outputs[0].lockingBytecode == tx.inputs[0].lockingBytecode)';
     const stamps5 = targetSlots.map(makeStampUtxo);
     const slotBytes = Uint8Array.from(targetSlots.map((s) => s.slot));

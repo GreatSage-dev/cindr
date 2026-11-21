@@ -54,7 +54,7 @@ function setupWorld(slots = createBlazeTokenHuntRegistry(DEMO_CATEGORY)) {
   return { provider, tracker, forge, dispenser, forgeBaton, dispBaton, slots };
 }
 
-describe('BLAZE Forge / StampForge — CashVM Deterministic & Adversarial Suite', () => {
+describe('cindr — CashVM Deterministic & Adversarial Suite', () => {
   it('1. Button #1: Claim 5 Demo Stamps in 1 tx succeeds and preserves Dispenser baton', async () => {
     const { provider, tracker, dispenser, slots } = setupWorld();
     const judge = makeTestWallet('01');
@@ -174,7 +174,7 @@ describe('BLAZE Forge / StampForge — CashVM Deterministic & Adversarial Suite'
 
     const tx = await forged.builder.send();
     expect(tx.txid).toMatch(/^[0-9a-f]{64}$/);
-    expect(forged.summary.tierName).toBe('BLAZE Trophy');
+    expect(forged.summary.tierName).toBe('cindr Trophy');
     expect(forged.summary.trophyCommitmentHex).toBe('09000102030405060708');
 
     const after = await provider.getUtxos(hunter.tokenAddress);
@@ -372,5 +372,37 @@ describe('BLAZE Forge / StampForge — CashVM Deterministic & Adversarial Suite'
       "m/44'/145'/0'/0/4",
     ]);
     expect(wcBuilt.wcTransaction.broadcast).toBe(true);
+  });
+
+  it('12. Tier 10 with low dust stamps merges explicit fee UTXO dynamically and forges successfully', async () => {
+    const { provider, tracker, slots } = setupWorld();
+    const veteran = makeTestWallet('09');
+
+    // 10 stamps carrying only 600 sats each = 6,000 sats (insufficient alone for Tier 10 fee + dust)
+    const tokenUtxos = slots.slice(0, 10).map((s) =>
+      provider.addUtxo(
+        veteran.tokenAddress,
+        randomUtxo({
+          satoshis: 600n,
+          token: { category: s.category, amount: 1n },
+        })
+      )
+    );
+    const feeUtxo = provider.addUtxo(veteran.tokenAddress, randomUtxo({ satoshis: 25000n }));
+
+    const forged = await buildForgeTx(tokenUtxos, { id: 'trailblazer-trophy', min: 10 }, {
+      provider,
+      forgeCategory: FORGE_CATEGORY,
+      slots,
+      recipientAddress: veteran.tokenAddress,
+      signer: veteran.signer,
+      batonTracker: tracker,
+      feeUtxos: [feeUtxo],
+    });
+
+    expect(forged.builder.inputs.length).toBeGreaterThanOrEqual(12); // 1 baton + 10 stamps + 1 fee
+    const tx = await forged.builder.send();
+    expect(tx.txid).toMatch(/^[0-9a-f]{64}$/);
+    expect(forged.summary.trophyCommitmentHex).toBe('0a00010203040506070809');
   });
 });

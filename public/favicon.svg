@@ -1,0 +1,12 @@
+<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .mark { color: #23263b; }
+    @media (prefers-color-scheme: dark) {
+      .mark { color: #f5f5fa; }
+    }
+  </style>
+  <g class="mark">
+    <path d="M18 6A8 8 0 1 0 18 18" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+    <rect x="12" y="10" width="9" height="4" rx="2" fill="currentColor"/>
+  </g>
+</svg>

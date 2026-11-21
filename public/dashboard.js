@@ -1,24 +1,41 @@
-// BLAZE Forge Workspace Controller — Real API Integration, Session Wallets, Disclosures & Tab Choreography
+// cindr Workspace Controller — Real API Integration, Session Wallets, Disclosures & Tab Choreography
 
 const SESSION_STORAGE_KEY = 'blaze_forge_session_wallets_v1';
 
+const numberFormatter = new Intl.NumberFormat(
+  navigator.languages && navigator.languages.length ? navigator.languages : ['en-US']
+);
+
+function syncUrlParams(updates) {
+  const url = new URL(window.location.href);
+  const defaults = { tab: 'forge', tier: '5', filter: 'all' };
+  for (const [key, val] of Object.entries(updates)) {
+    if (!val || val === defaults[key]) {
+      url.searchParams.delete(key);
+    } else {
+      url.searchParams.set(key, String(val));
+    }
+  }
+  window.history.replaceState(null, '', url.toString());
+}
+
 const ATTACK_PLAIN = {
   'under-count-4':
-    'Blocked — the covenant requires exactly 5, 9, or 10 distinct stamps; submitting 4 stamps fails immediately.',
+    'Blocked — the covenant requires 5, 9, or 10 distinct stamps; submitting 4 stamps fails immediately.',
   'duplicate-slot':
     'Blocked — slot indices must increase strictly (slot > prevSlot), rejecting duplicate Stamp #1.',
   'fake-category':
     'Blocked — every badge UTXO category must match its registered 32-byte TokenHunt slot ID.',
   'anti-burn-keep-stamps':
-    'Blocked — Output 2 must carry zero token categories (tokenCategory == 0x), proving spent stamps burn forever.',
+    'Blocked — Output 2 must carry 0 token categories (tokenCategory == 0x), proving spent stamps burn forever.',
   'steal-baton':
-    'Blocked — Output 0 must return the Minting Baton NFT back to the BlazeForge covenant locking bytecode.',
+    'Blocked — Output 0 must return the Minting Baton NFT back to the cindr covenant locking bytecode.',
 };
 
 const TIER_META = {
-  5: { name: 'BLAZE Medallion', need: 5 },
-  9: { name: 'BLAZE Trophy', need: 9 },
-  10: { name: 'Trailblazer Trophy', need: 10 },
+  5: { name: 'cindr Medallion', need: 5 },
+  9: { name: 'cindr Trophy', need: 9 },
+  10: { name: 'cindr Apex Trophy', need: 10 },
 };
 
 const state = {
@@ -190,6 +207,7 @@ const dom = {
   popoverFullAddr: document.getElementById('popover-full-address'),
   btnCopyAddr: document.getElementById('btn-copy-address'),
   btnNewSandbox: document.getElementById('btn-new-sandbox'),
+  sandboxWalletError: document.getElementById('sandbox-wallet-error'),
   popoverWalletListWrap: document.getElementById('popover-wallet-list-wrap'),
   popoverWalletList: document.getElementById('popover-wallet-list'),
   formCustomAddress: document.getElementById('form-custom-address'),
@@ -400,32 +418,42 @@ function renderForgeWorkspace() {
 
   // Workspace One-line Finding & Single Primary Header Action
   if (dom.workspaceFinding && dom.btnHeaderPrimary) {
+    dom.btnHeaderPrimary.classList.toggle('is-busy', state.busy);
+    dom.btnHeaderPrimary.setAttribute('aria-busy', String(state.busy));
     if (!overview) {
-      dom.workspaceFinding.textContent = 'Connect or create a sandbox wallet to begin forging.';
+      dom.workspaceFinding.textContent = 'Connect or create a sandbox wallet to begin.';
       dom.btnHeaderPrimary.disabled = true;
       dom.btnHeaderPrimary.textContent = 'Loading…';
     } else if (canForgeSelected) {
       dom.workspaceFinding.textContent = `${distinctCount} distinct stamps held — ready to burn ${tierDef.need} and mint your ${tierDef.name} in 0 blocks.`;
       dom.btnHeaderPrimary.disabled = state.busy;
-      dom.btnHeaderPrimary.textContent = isExternal
-        ? `Build unsigned ${tierDef.name}`
-        : `Forge ${tierDef.name}`;
+      dom.btnHeaderPrimary.textContent =
+        state.busy && state.lastActionKind === 'forge'
+          ? 'Minting…'
+          : isExternal
+          ? `Build unsigned ${tierDef.name}`
+          : `Mint ${tierDef.name}`;
       dom.btnHeaderPrimary.dataset.action = 'forge';
     } else if (distinctCount >= 5) {
       const missing = tierDef.need - distinctCount;
       dom.workspaceFinding.textContent = `${distinctCount} stamps held (ready for 5-stamp Medallion; need ${missing} more for ${tierDef.name}).`;
       dom.btnHeaderPrimary.disabled = state.busy;
-      dom.btnHeaderPrimary.textContent = 'Forge BLAZE Medallion (5)';
+      dom.btnHeaderPrimary.textContent =
+        state.busy && state.lastActionKind === 'forge'
+          ? 'Minting…'
+          : 'Mint cindr Medallion (5)';
       dom.btnHeaderPrimary.dataset.action = 'forge-5';
     } else if (isMock) {
-      dom.workspaceFinding.textContent = `${distinctCount} stamps in this wallet — claim 5 free Demo Stamps in one transaction to unlock forging.`;
+      dom.workspaceFinding.textContent = `${distinctCount} stamps in this wallet — claim 5 free Demo Stamps in 1 transaction to unlock minting.`;
       dom.btnHeaderPrimary.disabled = state.busy;
-      dom.btnHeaderPrimary.textContent = 'Claim 5 demo stamps';
+      dom.btnHeaderPrimary.textContent =
+        state.busy && state.lastActionKind === 'claim' ? 'Claiming…' : 'Claim 5 demo stamps';
       dom.btnHeaderPrimary.dataset.action = 'claim';
     } else {
       dom.workspaceFinding.textContent = `${distinctCount} stamps held — collect ${5 - distinctCount} more official TokenHunt badges or claim Demo Stamps.`;
       dom.btnHeaderPrimary.disabled = state.busy;
-      dom.btnHeaderPrimary.textContent = 'Claim 5 demo stamps';
+      dom.btnHeaderPrimary.textContent =
+        state.busy && state.lastActionKind === 'claim' ? 'Claiming…' : 'Claim 5 demo stamps';
       dom.btnHeaderPrimary.dataset.action = 'claim';
     }
   }
@@ -434,9 +462,9 @@ function renderForgeWorkspace() {
   if (dom.tierHint) {
     dom.tierHint.textContent =
       state.selectedTier === 5
-        ? 'Accepts any 5 distinct official badges or 5 one-click Demo Stamps (slots 10–14).'
+        ? 'Accepts any 5 distinct official badges or 5 1-click Demo Stamps (slots 10–14).'
         : state.selectedTier === 9
-        ? 'Requires 9 distinct registered stamps verified together inside BlazeForge.cash.'
+        ? 'Requires 9 distinct registered stamps verified together inside the cindr covenant.'
         : 'Requires 10 distinct registered stamps verified under CashVM OpCost limits.';
   }
   if (dom.slotProgressPill) {
@@ -497,32 +525,36 @@ function renderForgeWorkspace() {
 
   // Action Controls
   if (dom.btnForgeAction && dom.btnClaimAction && dom.actionNote) {
+    const forgeBusy = state.busy && state.lastActionKind === 'forge';
+    const claimBusy = state.busy && state.lastActionKind === 'claim';
     dom.btnForgeAction.disabled = state.busy || !canForgeSelected;
-    dom.btnForgeAction.textContent =
-      state.busy && state.lastActionKind === 'forge'
-        ? 'Forging…'
-        : isExternal
-        ? `Build unsigned ${tierDef.name}`
-        : `Forge ${tierDef.name}`;
+    dom.btnForgeAction.classList.toggle('is-busy', forgeBusy);
+    dom.btnForgeAction.setAttribute('aria-busy', String(forgeBusy));
+    dom.btnForgeAction.textContent = forgeBusy
+      ? 'Minting…'
+      : isExternal
+      ? `Build unsigned ${tierDef.name}`
+      : `Mint ${tierDef.name}`;
     dom.btnClaimAction.disabled = state.busy || !overview;
-    dom.btnClaimAction.textContent =
-      state.busy && state.lastActionKind === 'claim' ? 'Claiming…' : 'Claim 5 demo stamps';
+    dom.btnClaimAction.classList.toggle('is-busy', claimBusy);
+    dom.btnClaimAction.setAttribute('aria-busy', String(claimBusy));
+    dom.btnClaimAction.textContent = claimBusy ? 'Claiming…' : 'Claim 5 demo stamps';
     if (!canForgeSelected) {
       const missing = tierDef.need - distinctCount;
-      dom.actionNote.textContent = `Forge disabled: hold ${missing} more distinct ${missing === 1 ? 'stamp' : 'stamps'} to unlock ${tierDef.name}.`;
+      dom.actionNote.textContent = `Mint disabled: hold ${missing} more distinct ${missing === 1 ? 'stamp' : 'stamps'} to unlock ${tierDef.name}.`;
     } else if (isExternal) {
       dom.actionNote.textContent =
         'External address mode: builds a ready-to-sign WalletConnect payload without touching private keys.';
     } else {
       dom.actionNote.textContent =
-        'Ready: executes a single 0-conf transaction burning held stamps and returning the contract baton.';
+        'Ready: runs 1 0-conf transaction burning held stamps and returning the contract baton.';
     }
   }
 
   // Collapsible UTXO Disclosure
   if (dom.utxoLabel && dom.utxoBody) {
     const utxoCount = overview?.utxoCount ?? 0;
-    const bch = overview ? overview.bchSatoshis.toLocaleString() : '0';
+    const bch = overview ? numberFormatter.format(overview.bchSatoshis) : '0';
     dom.utxoLabel.textContent = `Inspect stamp & fee UTXOs (${stamps.length} stamps · ${bch} BCH sats · ${utxoCount} total)`;
 
     dom.utxoBody.innerHTML = '';
@@ -645,8 +677,8 @@ function showReceiptSuccess(payload) {
   dom.resultMs.textContent = `${payload.ms}ms`;
   dom.resultSummary.textContent = payload.summary;
   dom.txidLabel.textContent = payload.unsigned ? 'Unsigned Tx Hash' : 'Transaction ID';
-  dom.resultTxid.textContent = payload.txid;
-  dom.resultBytes.textContent = `${payload.bytes.toLocaleString()} bytes`;
+  dom.resultTxid.textContent = payload.txid || '—';
+  dom.resultBytes.textContent = `${numberFormatter.format(payload.bytes)} bytes`;
   dom.resultZeroConf.textContent = payload.zeroConf ? 'Chained in mempool' : 'Confirmed base';
 
   dom.techSpentBaton.textContent = payload.spentBatonOutpoint || '—';
@@ -705,7 +737,7 @@ function renderNetworkAndRegistry() {
     dom.batonPendingBadge.textContent = `${state.baton.pendingZeroConfChains} unconfirmed`;
     dom.batonStatusList.innerHTML = '';
     const items = [
-      { label: 'BlazeForge minting baton', value: state.baton.forge.currentBatonOutpoint },
+      { label: 'cindr minting baton', value: state.baton.forge.currentBatonOutpoint },
       { label: 'StampDispenser faucet baton', value: state.baton.dispenser.currentBatonOutpoint },
     ];
     for (const item of items) {
@@ -876,7 +908,6 @@ async function runClaimStamps() {
       ms: res.receipt.executionTimeMs,
     });
     renderActivityLog();
-    state.busy = false;
     await Promise.all([refreshWalletOverview(), refreshNetworkTelemetry()]);
   } catch (err) {
     showReceiptError(
@@ -971,19 +1002,18 @@ async function runForge(overrideTier) {
     });
 
     state.activityLog.unshift({
-      title: `Forge ${res.trophy.tierName} (Tier ${tier})`,
+      title: `Mint ${res.trophy.tierName} (Tier ${tier})`,
       walletLabel: currentLabel,
       txid: finalTxid,
       bytes: res.receipt.txBytes,
       ms: res.receipt.executionTimeMs,
     });
     renderActivityLog();
-    state.busy = false;
     await Promise.all([refreshWalletOverview(), refreshNetworkTelemetry()]);
   } catch (err) {
     showReceiptError(
-      'Trophy forge failed',
-      err instanceof Error ? err.message : 'Unable to forge Trophy.'
+      'Trophy mint failed',
+      err instanceof Error ? err.message : 'Unable to mint Trophy.'
     );
   } finally {
     state.busy = false;
@@ -1020,8 +1050,13 @@ function setWcStatus(message, kind = 'normal') {
   dom.wcStatusLine.classList.toggle('is-connected', kind === 'connected');
 }
 
+let lastFocusedBeforeModal = null;
+
 function openWcModal(preserveExisting = false) {
   if (!dom.wcModal) return;
+  if (dom.wcModal.hidden && document.activeElement instanceof HTMLElement) {
+    lastFocusedBeforeModal = document.activeElement;
+  }
   if (!preserveExisting) {
     state.wcPairingUri = null;
     dom.wcQrStage?.classList.remove('is-ready');
@@ -1040,11 +1075,28 @@ function openWcModal(preserveExisting = false) {
 
 function closeWcModal(cancelIfConnecting = true) {
   if (!dom.wcModal) return;
+  const wasOpen = !dom.wcModal.hidden;
   dom.wcModal.hidden = true;
+  if (wasOpen) {
+    state.wcModalDismissed = true;
+  }
   if (cancelIfConnecting && state.wcStatus === 'connecting' && state.wcModule) {
     state.wcModule.disconnect().catch(() => {});
     state.wcStatus = 'idle';
     renderWalletHeader();
+  }
+  if (wasOpen) {
+    const restoreTarget = lastFocusedBeforeModal;
+    lastFocusedBeforeModal = null;
+    if (
+      restoreTarget &&
+      restoreTarget.isConnected &&
+      !(dom.walletPopover?.hidden && dom.walletPopover.contains(restoreTarget))
+    ) {
+      restoreTarget.focus();
+    } else {
+      dom.btnWalletMenu?.focus();
+    }
   }
 }
 
@@ -1093,13 +1145,14 @@ function createWcCallbacks() {
         state.wcStatus = 'idle';
         state.wcWalletName = null;
         state.wcAddress = null;
-        if (info?.message) {
+        if (info?.message && !state.wcModalDismissed) {
           setWcStatus(info.message, 'error');
         }
         renderWalletHeader();
         return;
       }
       if (status === 'connected') {
+        state.wcModalDismissed = false;
         handleWcConnected(info);
         return;
       }
@@ -1108,9 +1161,14 @@ function createWcCallbacks() {
       renderWalletHeader();
     },
     onUri({ uri, qrUri }) {
+      if (state.wcModalDismissed) return;
       state.wcPairingUri = uri;
       if (state.wcModule && dom.wcQrCanvas) {
-        state.wcModule.drawQR(dom.wcQrCanvas, qrUri, 232);
+        try {
+          state.wcModule.drawQR(dom.wcQrCanvas, qrUri, 232);
+        } catch {
+          // Ignore QR render failures on unmounted canvas
+        }
       }
       dom.wcQrStage?.classList.add('is-ready');
       if (dom.btnWcOpenApp) {
@@ -1127,6 +1185,7 @@ function createWcCallbacks() {
 
 async function startLiveWalletConnect() {
   closeWalletPopover();
+  state.wcModalDismissed = false;
   if (state.wcStatus === 'connected') {
     openWcModal(true);
     setWcStatus(`Connected to ${state.wcWalletName || 'BCH Wallet'}`, 'connected');
@@ -1148,7 +1207,26 @@ async function startLiveWalletConnect() {
   }
 }
 
-async function disconnectLiveWallet() {
+let disconnectConfirmTimer = 0;
+
+function resetDisconnectConfirmState() {
+  clearTimeout(disconnectConfirmTimer);
+  disconnectConfirmTimer = 0;
+  if (dom.btnDisconnectLiveWallet) {
+    delete dom.btnDisconnectLiveWallet.dataset.confirming;
+    dom.btnDisconnectLiveWallet.textContent = 'Disconnect live wallet';
+  }
+}
+
+async function disconnectLiveWallet(requireConfirm = false) {
+  if (requireConfirm && dom.btnDisconnectLiveWallet && !dom.btnDisconnectLiveWallet.dataset.confirming) {
+    dom.btnDisconnectLiveWallet.dataset.confirming = 'true';
+    dom.btnDisconnectLiveWallet.textContent = 'Confirm disconnect?';
+    clearTimeout(disconnectConfirmTimer);
+    disconnectConfirmTimer = window.setTimeout(resetDisconnectConfirmState, 4000);
+    return;
+  }
+  resetDisconnectConfirmState();
   try {
     if (state.wcModule) {
       await state.wcModule.disconnect();
@@ -1254,7 +1332,7 @@ function openWalletPopover() {
   dom.btnWalletMenu.setAttribute('aria-expanded', 'true');
 }
 
-function switchTab(tabKey) {
+function switchTab(tabKey, updateUrl = true) {
   dom.tabButtons.forEach((btn) => {
     const active = btn.dataset.tab === tabKey;
     btn.classList.toggle('is-active', active);
@@ -1265,6 +1343,10 @@ function switchTab(tabKey) {
   dom.tabPanels.forEach((panel) => {
     panel.hidden = panel.id !== `panel-${tabKey}`;
   });
+
+  if (updateUrl) {
+    syncUrlParams({ tab: tabKey });
+  }
 
   if (tabKey === 'proofs' && dom.attackMs?.textContent === 'Click an attack to execute live') {
     const firstAttackBtn = dom.attackButtons[0];
@@ -1299,11 +1381,33 @@ function wireEvents() {
         closeWalletPopover();
         dom.btnWalletMenu?.focus();
       }
+      return;
+    }
+
+    if (e.key === 'Tab' && dom.wcModal && !dom.wcModal.hidden) {
+      const focusables = Array.from(
+        dom.wcModal.querySelectorAll(
+          'button:not(:disabled), a[href]:not([aria-disabled="true"]), input:not(:disabled), [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((el) => el instanceof HTMLElement && el.offsetParent !== null);
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && (document.activeElement === first || !dom.wcModal.contains(document.activeElement))) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     }
   });
 
-  dom.btnConnectLiveWallet?.addEventListener('click', () => startLiveWalletConnect());
-  dom.btnDisconnectLiveWallet?.addEventListener('click', () => disconnectLiveWallet());
+  dom.btnConnectLiveWallet?.addEventListener('click', () => {
+    closeWalletPopover();
+    startLiveWalletConnect();
+  });
+  dom.btnDisconnectLiveWallet?.addEventListener('click', () => disconnectLiveWallet(true));
   dom.btnWcClose?.addEventListener('click', () => closeWcModal());
   dom.wcModal?.addEventListener('click', (e) => {
     if (e.target === dom.wcModal) closeWcModal();
@@ -1314,26 +1418,32 @@ function wireEvents() {
 
   dom.btnCopyAddr?.addEventListener('click', () => copyText(state.activeAddress, dom.btnCopyAddr));
   dom.btnCopyTxid?.addEventListener('click', () =>
-    copyText(dom.resultTxid.textContent, dom.btnCopyTxid)
+    copyText(dom.resultTxid?.textContent, dom.btnCopyTxid)
   );
   dom.btnCopyHex?.addEventListener('click', () =>
-    copyText(dom.techRawHex.textContent, dom.btnCopyHex)
+    copyText(dom.techRawHex?.textContent, dom.btnCopyHex)
   );
 
   dom.btnNewSandbox?.addEventListener('click', async () => {
     dom.btnNewSandbox.disabled = true;
+    if (dom.sandboxWalletError) dom.sandboxWalletError.hidden = true;
     try {
       await createAndSelectSandboxWallet();
       closeWalletPopover();
     } catch (err) {
-      if (dom.customAddressError) {
-        dom.customAddressError.textContent =
+      if (dom.sandboxWalletError) {
+        dom.sandboxWalletError.textContent =
           err instanceof Error ? err.message : 'Unable to create sandbox wallet.';
-        dom.customAddressError.hidden = false;
+        dom.sandboxWalletError.hidden = false;
       }
     } finally {
       dom.btnNewSandbox.disabled = false;
     }
+  });
+
+  dom.inputCustomAddress?.addEventListener('input', () => {
+    dom.inputCustomAddress?.removeAttribute('aria-invalid');
+    if (dom.customAddressError) dom.customAddressError.hidden = true;
   });
 
   dom.formCustomAddress?.addEventListener('submit', async (e) => {
@@ -1342,11 +1452,19 @@ function wireEvents() {
     if (!raw) {
       dom.customAddressError.textContent = 'Enter a bchtest: or bitcoincash: address.';
       dom.customAddressError.hidden = false;
+      dom.inputCustomAddress?.setAttribute('aria-invalid', 'true');
+      dom.inputCustomAddress?.focus();
       return;
+    }
+    const submitBtn = dom.formCustomAddress.querySelector('button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.classList.add('is-busy');
     }
     try {
       const overview = await apiGet(`/api/wallet?address=${encodeURIComponent(raw)}`);
       dom.customAddressError.hidden = true;
+      dom.inputCustomAddress?.removeAttribute('aria-invalid');
       if (!state.wallets.some((w) => w.address === overview.address)) {
         state.wallets.unshift({
           address: overview.address,
@@ -1364,6 +1482,13 @@ function wireEvents() {
       dom.customAddressError.textContent =
         err instanceof Error ? err.message : 'Invalid CashAddress.';
       dom.customAddressError.hidden = false;
+      dom.inputCustomAddress?.setAttribute('aria-invalid', 'true');
+      dom.inputCustomAddress?.focus();
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('is-busy');
+      }
     }
   });
 
@@ -1395,6 +1520,7 @@ function wireEvents() {
         b.classList.toggle('is-active', active);
         b.setAttribute('aria-pressed', String(active));
       });
+      syncUrlParams({ tier: String(state.selectedTier) });
       renderForgeWorkspace();
     });
   });
@@ -1438,6 +1564,7 @@ function wireEvents() {
         p.classList.toggle('is-active', active);
         p.setAttribute('aria-pressed', String(active));
       });
+      syncUrlParams({ filter: state.registryFilter });
       renderNetworkAndRegistry();
     });
   });
@@ -1447,9 +1574,34 @@ function wireEvents() {
 // Bootstrap
 // ---------------------------------------------------------------------------
 async function init() {
+  const params = new URLSearchParams(window.location.search);
+  const urlTier = params.get('tier');
+  if (urlTier === '5' || urlTier === '9' || urlTier === '10') {
+    state.selectedTier = Number(urlTier);
+    dom.tierButtons.forEach((b) => {
+      const active = b.dataset.tier === urlTier;
+      b.classList.toggle('is-active', active);
+      b.setAttribute('aria-pressed', String(active));
+    });
+  }
+  const urlFilter = params.get('filter');
+  if (urlFilter === 'all' || urlFilter === 'official' || urlFilter === 'demo') {
+    state.registryFilter = urlFilter;
+    dom.filterPills.forEach((p) => {
+      const active = p.dataset.filter === urlFilter;
+      p.classList.toggle('is-active', active);
+      p.setAttribute('aria-pressed', String(active));
+    });
+  }
+
   wireEvents();
   await refreshNetworkTelemetry();
   restoreStoredWcSessionIfPresent();
+
+  const urlTab = params.get('tab');
+  if (urlTab === 'forge' || urlTab === 'proofs' || urlTab === 'network') {
+    switchTab(urlTab, false);
+  }
 
   const saved = loadSessionWallets();
   if (saved) {

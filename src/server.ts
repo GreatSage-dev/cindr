@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { createServer, type Server } from 'node:http';
+import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { fileURLToPath } from 'node:url';
 import { loadAppConfig } from './config.js';
 import { IdempotencyStore } from './api/idempotency.js';
@@ -39,25 +39,29 @@ export function createBlazeContext(options: BlazeServerOptions = {}): RouteConte
   };
 }
 
-function createHttpServer(ctx: RouteContext): Server {
-  return createServer(async (req, res) => {
-    const startedAt = Date.now();
-    const requestId = randomUUID().slice(0, 8);
-    try {
-      await handleRequest(req, res, ctx);
-    } catch (err: unknown) {
-      if (!process.env.VITEST) {
-        console.error(
-          JSON.stringify({
-            level: 'error',
-            requestId,
-            method: req.method,
-            url: req.url,
-            error: err instanceof Error ? err.message : String(err),
-          })
-        );
-      }
-      if (!res.headersSent) {
+export async function handleBlazeHttpRequest(
+  req: IncomingMessage,
+  res: ServerResponse,
+  ctx: RouteContext
+): Promise<void> {
+  const startedAt = Date.now();
+  const requestId = randomUUID().slice(0, 8);
+  try {
+    await handleRequest(req, res, ctx);
+  } catch (err: unknown) {
+    if (!process.env.VITEST) {
+      console.error(
+        JSON.stringify({
+          level: 'error',
+          requestId,
+          method: req.method,
+          url: req.url,
+          error: err instanceof Error ? err.message : String(err),
+        })
+      );
+    }
+    if (!res.headersSent) {
+      try {
         sendError(
           res,
           500,
@@ -66,21 +70,29 @@ function createHttpServer(ctx: RouteContext): Server {
           undefined,
           ctx
         );
-      }
-    } finally {
-      if (!process.env.VITEST && req.url?.startsWith('/api/')) {
-        console.log(
-          JSON.stringify({
-            level: 'info',
-            requestId,
-            method: req.method,
-            url: req.url,
-            status: res.statusCode,
-            durationMs: Date.now() - startedAt,
-          })
-        );
+      } catch {
+        // Ignore socket write failures on aborted requests
       }
     }
+  } finally {
+    if (!process.env.VITEST && req.url?.startsWith('/api/')) {
+      console.log(
+        JSON.stringify({
+          level: 'info',
+          requestId,
+          method: req.method,
+          url: req.url,
+          status: res.statusCode,
+          durationMs: Date.now() - startedAt,
+        })
+      );
+    }
+  }
+}
+
+function createHttpServer(ctx: RouteContext): Server {
+  return createServer((req, res) => {
+    void handleBlazeHttpRequest(req, res, ctx);
   });
 }
 

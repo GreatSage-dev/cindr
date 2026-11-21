@@ -8,6 +8,39 @@
       "destination": "/dashboard.html"
     }
   ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'none';"
+        }
+      ]
+    },
+    {
+      "source": "/dashboard(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self' wss://relay.riften.net:443 wss://relay.cauldron.quest:443 wss://bch.imaginary.cash:50004 wss://electrum.imaginary.cash:50004 wss://fulcrum.pat.mn:50004 wss://chipnet.imaginary.cash:50004; img-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'none';"
+        }
+      ]
+    },
+    {
+      "source": "/vendor/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self' wss://relay.riften.net:443 wss://relay.cauldron.quest:443 wss://bch.imaginary.cash:50004 wss://electrum.imaginary.cash:50004 wss://fulcrum.pat.mn:50004 wss://chipnet.imaginary.cash:50004; img-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'none';"
+        },
+        { "key": "Cache-Control", "value": "public, max-age=86400" }
+      ]
+    }
+  ],
   "functions": {
     "api/**/*.ts": {
       "includeFiles": "artifacts/**",

@@ -33,6 +33,10 @@ const STATIC_ASSET_MAP: Record<string, { filePath: string; contentType: string }
     filePath: path.join(PROJECT_ROOT, 'public', 'index.html'),
     contentType: 'text/html; charset=utf-8',
   },
+  '/tokens.css': {
+    filePath: path.join(PROJECT_ROOT, 'public', 'tokens.css'),
+    contentType: 'text/css; charset=utf-8',
+  },
   '/styles.css': {
     filePath: path.join(PROJECT_ROOT, 'public', 'styles.css'),
     contentType: 'text/css; charset=utf-8',
@@ -58,11 +62,11 @@ const STATIC_ASSET_MAP: Record<string, { filePath: string; contentType: string }
     contentType: 'application/javascript; charset=utf-8',
   },
   '/vendor/three.module.js': {
-    filePath: path.join(PROJECT_ROOT, 'node_modules', 'three', 'build', 'three.module.js'),
+    filePath: path.join(PROJECT_ROOT, 'public', 'vendor', 'three.module.js'),
     contentType: 'application/javascript; charset=utf-8',
   },
   '/vendor/three.core.js': {
-    filePath: path.join(PROJECT_ROOT, 'node_modules', 'three', 'build', 'three.core.js'),
+    filePath: path.join(PROJECT_ROOT, 'public', 'vendor', 'three.core.js'),
     contentType: 'application/javascript; charset=utf-8',
   },
   '/vendor/wizardconnect.js': {
@@ -81,14 +85,28 @@ const STATIC_ASSET_MAP: Record<string, { filePath: string; contentType: string }
     filePath: path.join(PROJECT_ROOT, 'public', 'vendor', 'chunk-SQE76S5B.js'),
     contentType: 'application/javascript; charset=utf-8',
   },
+  '/favicon.svg': {
+    filePath: path.join(PROJECT_ROOT, 'public', 'favicon.svg'),
+    contentType: 'image/svg+xml; charset=utf-8',
+  },
 };
 
 const MAX_JSON_BODY_BYTES = 256 * 1024;
 
-const SECURITY_HEADERS: Record<string, string> = {
+const BASE_SECURITY_HEADERS: Record<string, string> = {
   'X-Content-Type-Options': 'nosniff',
   'X-Frame-Options': 'DENY',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
+};
+
+const SECURITY_HEADERS_LANDING: Record<string, string> = {
+  ...BASE_SECURITY_HEADERS,
+  'Content-Security-Policy':
+    "default-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'none';",
+};
+
+const SECURITY_HEADERS_APP: Record<string, string> = {
+  ...BASE_SECURITY_HEADERS,
   'Content-Security-Policy':
     "default-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self' wss://relay.riften.net:443 wss://relay.cauldron.quest:443 wss://bch.imaginary.cash:50004 wss://electrum.imaginary.cash:50004 wss://fulcrum.pat.mn:50004 wss://chipnet.imaginary.cash:50004; img-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'none';",
 };
@@ -172,8 +190,12 @@ async function tryServeStatic(
   }
 
   const content = await readFile(entry.filePath);
+  const securityHeaders =
+    pathname.startsWith('/dashboard') || pathname.startsWith('/vendor/')
+      ? SECURITY_HEADERS_APP
+      : SECURITY_HEADERS_LANDING;
   res.writeHead(200, {
-    ...SECURITY_HEADERS,
+    ...securityHeaders,
     'Content-Type': entry.contentType,
     'Content-Length': content.byteLength,
     'Cache-Control': pathname.startsWith('/vendor/')
@@ -256,7 +278,7 @@ export async function parseJsonBody<T = unknown>(
       const buf = typeof chunk === 'string' ? Buffer.from(chunk, 'utf8') : chunk;
       totalBytes += buf.byteLength;
       if (totalBytes > maxBytes) {
-        req.pause();
+        req.resume();
         fail(new PayloadTooLargeError(maxBytes));
         return;
       }
@@ -305,16 +327,26 @@ function renderNotFoundHtml(pathname: string): string {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Page not found — BLAZE Forge</title>
+  <meta name="theme-color" content="#f7f7fa">
+  <title>Page not found — cindr</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/tokens.css">
   <link rel="stylesheet" href="/dashboard.css">
 </head>
 <body class="notfound-body">
   <main class="notfound-card">
+    <div class="notfound-brand">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M18 6A8 8 0 1 0 18 18" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+        <rect x="12" y="10" width="9" height="4" rx="2" fill="currentColor"/>
+      </svg>
+      <span>cindr</span>
+    </div>
     <p class="eyebrow-tag">HTTP 404</p>
-    <h1>Page not found</h1>
+    <h1 class="notfound-title">Page not found</h1>
     <p class="muted-copy">No page exists at <code>${safePath}</code>.</p>
     <div class="notfound-actions">
-      <a href="/dashboard" class="btn-primary">Open Forge workspace</a>
+      <a href="/dashboard" class="btn-primary">Open cindr workspace</a>
       <a href="/" class="btn-secondary">Back to overview</a>
     </div>
   </main>
@@ -322,9 +354,27 @@ function renderNotFoundHtml(pathname: string): string {
 </html>`;
 }
 
+function resolveClientIp(req: IncomingMessage): string {
+  if (process.env.VERCEL || process.env.TRUST_PROXY === 'true') {
+    const vercelIp = req.headers['x-vercel-forwarded-for'];
+    if (typeof vercelIp === 'string' && vercelIp.trim()) {
+      return vercelIp.split(',')[0].trim();
+    }
+    const realIp = req.headers['x-real-ip'];
+    if (typeof realIp === 'string' && realIp.trim()) {
+      return realIp.trim();
+    }
+    const forwardedFor = req.headers['x-forwarded-for'];
+    if (typeof forwardedFor === 'string' && forwardedFor.trim()) {
+      return forwardedFor.split(',')[0].trim();
+    }
+  }
+  return req.socket?.remoteAddress ?? 'unknown';
+}
+
 function enforcePostRateLimit(req: IncomingMessage, res: ServerResponse, ctx: RouteContext): boolean {
   if (!ctx.rateLimiter) return true;
-  const ip = req.socket?.remoteAddress ?? 'unknown';
+  const ip = resolveClientIp(req);
   if (!ctx.rateLimiter.check(ip)) {
     sendError(
       res,
@@ -372,21 +422,33 @@ export async function handleRequest(
   }
 
   if (isReadMethod && (pathname === '/api/baton' || pathname === '/baton')) {
-    const baton = await ctx.service.getBatonStatus();
-    sendJson(res, 200, baton, ctx, headOnly);
+    try {
+      const baton = await ctx.service.getBatonStatus();
+      sendJson(res, 200, baton, ctx, headOnly);
+    } catch (err: unknown) {
+      if (!process.env.VITEST) {
+        console.error('[api] /api/baton provider failure:', err);
+      }
+      sendError(
+        res,
+        503,
+        'PROVIDER_UNAVAILABLE',
+        'Unable to query baton status from network provider right now.',
+        undefined,
+        ctx
+      );
+    }
     return;
   }
 
-  if (isReadMethod && pathname === '/api/wallet') {
+  if (isReadMethod && (pathname === '/api/wallet' || pathname === '/wallet')) {
     const address = url.searchParams.get('address')?.trim();
     if (!address) {
       sendError(res, 422, 'VALIDATION_ERROR', 'Missing address query parameter', { field: 'address' }, ctx);
       return;
     }
     try {
-      const overview = await ctx.service.getWalletOverview(address);
-      sendJson(res, 200, overview, ctx, headOnly);
-      return;
+      addressToLockingBytecode(address);
     } catch (err: unknown) {
       sendError(
         res,
@@ -398,6 +460,24 @@ export async function handleRequest(
       );
       return;
     }
+    try {
+      const overview = await ctx.service.getWalletOverview(address);
+      sendJson(res, 200, overview, ctx, headOnly);
+      return;
+    } catch (err: unknown) {
+      if (!process.env.VITEST) {
+        console.error('[api] /api/wallet provider failure:', err);
+      }
+      sendError(
+        res,
+        503,
+        'PROVIDER_UNAVAILABLE',
+        'Unable to query wallet UTXOs from network provider right now.',
+        undefined,
+        ctx
+      );
+      return;
+    }
   }
 
   if (isReadMethod) {
@@ -405,7 +485,7 @@ export async function handleRequest(
     if (served) return;
   }
 
-  if (method === 'POST' && pathname === '/api/wallet/demo') {
+  if (method === 'POST' && (pathname === '/api/wallet/demo' || pathname === '/wallet/demo')) {
     if (!enforcePostRateLimit(req, res, ctx)) return;
     try {
       const wallet = await ctx.service.createDemoWallet();
@@ -497,6 +577,10 @@ export async function handleRequest(
       if (scopedIdemKey) {
         ctx.idempotencyStore.release(scopedIdemKey);
       }
+      if (err instanceof ForgeValidationError) {
+        sendError(res, err.statusCode, err.code, err.message, undefined, ctx);
+        return;
+      }
       if (!process.env.VITEST) {
         console.error('[api] /api/stamps/claim failure:', err);
       }
@@ -512,7 +596,13 @@ export async function handleRequest(
     }
   }
 
-  if (method === 'POST' && (pathname === '/api/forge' || pathname === '/forge')) {
+  if (
+    method === 'POST' &&
+    (pathname === '/api/forge' ||
+      pathname === '/forge' ||
+      pathname === '/api/cindr' ||
+      pathname === '/cindr')
+  ) {
     if (!enforcePostRateLimit(req, res, ctx)) return;
 
     let body: ForgeRequest;
@@ -554,7 +644,7 @@ export async function handleRequest(
         res,
         422,
         'INVALID_TIER',
-        `Invalid tier "${body.tier}". Must be 5 (BLAZE Medallion), 9 (BLAZE Trophy), or 10 (Trailblazer Trophy)`,
+        `Invalid tier "${body.tier}". Must be 5 (cindr Medallion), 9 (cindr Trophy), or 10 (cindr Apex Trophy)`,
         { supportedTiers: [5, 9, 10] },
         ctx
       );
@@ -610,7 +700,7 @@ export async function handleRequest(
         res,
         500,
         'FORGE_FAILED',
-        'Unable to construct or broadcast the forge transaction.',
+        'Unable to construct or broadcast the cindr transaction.',
         undefined,
         ctx
       );
@@ -665,7 +755,7 @@ export async function handleRequest(
   if (isReadMethod && !pathname.startsWith('/api/') && acceptHeader.includes('text/html')) {
     const html = renderNotFoundHtml(pathname);
     res.writeHead(404, {
-      ...SECURITY_HEADERS,
+      ...SECURITY_HEADERS_LANDING,
       'Content-Type': 'text/html; charset=utf-8',
       'Content-Length': Buffer.byteLength(html),
     });

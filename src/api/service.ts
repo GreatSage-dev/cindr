@@ -76,6 +76,7 @@ export interface BlazeBackendServiceOptions {
   batonTracker?: BatonMempoolTracker;
   faucetPrivKeyHex?: string;
   allowUnsafeLocalSigning?: boolean;
+  maxSandboxSigners?: number;
 }
 
 function getTemplateBytecodeBytes(artifact: Artifact): number {
@@ -106,12 +107,15 @@ export class BlazeBackendService {
   private readonly faucetSigner: SignatureTemplate;
   private readonly faucetAddress: string;
   private readonly testSigners = new Map<string, SignatureTemplate>();
+  private readonly maxSandboxSigners: number;
+  private readonly attackCache = new Map<string, AttackResponse>();
   private readonly startTime: number;
   private sandboxWalletCount = 0;
 
   constructor(options: BlazeBackendServiceOptions = {}) {
     const config = loadAppConfig();
     this.startTime = Date.now();
+    this.maxSandboxSigners = Math.max(1, options.maxSandboxSigners ?? 1000);
     this.networkMode = options.networkMode ?? config.bchNetwork;
 
     if (options.provider) {
@@ -269,6 +273,11 @@ export class BlazeBackendService {
       payload: hash160(pub),
     }).address;
 
+    while (this.testSigners.size >= this.maxSandboxSigners) {
+      const oldestAddr = this.testSigners.keys().next().value;
+      if (oldestAddr === undefined) break;
+      this.testSigners.delete(oldestAddr);
+    }
     this.testSigners.set(address, new SignatureTemplate(priv));
     const funded = (this.provider as MockNetworkProvider).addUtxo(
       address,
@@ -282,6 +291,10 @@ export class BlazeBackendService {
       mode: 'sandbox',
       bchSatoshis: Number(funded.satoshis),
     };
+  }
+
+  sandboxSignerCount(): number {
+    return this.testSigners.size;
   }
 
   /**
@@ -372,7 +385,7 @@ export class BlazeBackendService {
       networkTarget: 'BCH_2026_05',
       contracts: {
         forge: {
-          name: 'BlazeForge',
+          name: 'cindr',
           bytecodeBytes: getTemplateBytecodeBytes(BlazeForgeArtifact),
           opcodesCount: getArtifactOpcodeCount(BlazeForgeArtifact),
           redeemScriptBytes: this.forge.bytesize,
@@ -508,7 +521,7 @@ export class BlazeBackendService {
       stamps,
       spentBatonOutpoint: claim.spentBatonOutpoint,
       nextBatonOutpoint: outpointKey(claim.nextBatonUtxo),
-      zeroConfChained: true,
+      zeroConfChained: claim.zeroConfChained,
       receipt: {
         executionTimeMs: Date.now() - startMs,
         txBytes: claim.txHex.length / 2,
@@ -596,13 +609,25 @@ export class BlazeBackendService {
 
   async runAttack(req: AttackRequest): Promise<AttackResponse> {
     const startMs = Date.now();
+    const cacheKey = `${this.forgeCategory}:${this.demoCategory}:${req.attackType}`;
+    const cached = this.attackCache.get(cacheKey);
+    if (cached) {
+      return {
+        ...cached,
+        receipt: {
+          executionTimeMs: Date.now() - startMs,
+          adversarialRefusalVerified: cached.rejected,
+        },
+      };
+    }
+
     const result = await runAdversarialForgeAttack(req.attackType, {
       forgeCategory: this.forgeCategory,
       demoCategory: this.demoCategory,
       slots: this.slots,
     });
 
-    return {
+    const response: AttackResponse = {
       attack: result.attack,
       label: result.label,
       expectedRule: result.expectedRule,
@@ -615,5 +640,11 @@ export class BlazeBackendService {
         adversarialRefusalVerified: result.rejected,
       },
     };
+    if (this.attackCache.size >= 10) {
+      const oldest = this.attackCache.keys().next().value;
+      if (oldest !== undefined) this.attackCache.delete(oldest);
+    }
+    this.attackCache.set(cacheKey, response);
+    return response;
   }
 }

@@ -1,0 +1,92 @@
+/* Shared cindr Design Tokens — Single Source of Truth across Landing & Workspace */
+
+:root {
+  /* Cool Neutral Frost Surfaces & Dark Contrast Panels */
+  --ground: #f7f7fa;
+  --ground-alt: #f2f2f6;
+  --surface: #ffffff;
+  --surface-tint: #f2f3f8;
+  --surface-dark: #1d1f30;
+  --surface-dark-raised: #25283d;
+  --surface-dark-deep: #181a28;
+
+  /* Hero Studio Backdrop Stops */
+  --hero-bg-top: #f3f4f8;
+  --hero-bg-mid: #eceef4;
+  --hero-bg-deep: #e4e6ef;
+
+  /* Hairline Dividers & Borders */
+  --border: #e4e6f0;
+  --border-strong: #c8ccd9;
+  --border-dark: rgba(255, 255, 255, 0.12);
+  --border-dark-strong: rgba(255, 255, 255, 0.24);
+
+  /* Ink Hierarchy */
+  --ink-strong: #181a28;
+  --ink: #23263b;
+  --ink-mid: #30334d;
+  --ink-soft: #3b3e5c;
+  --ink-muted: #52567a;
+  --ink-faint: #666a8a;
+  --ink-on-dark: #ffffff;
+  --ink-on-dark-muted: #d1d5e5;
+  --ink-on-dark-code: #e2e8f0;
+  --ink-on-dark-soft: #cbd5e1;
+
+  /* Brand Single-CTA Accent (< 3%) */
+  --accent: #003dff;
+  --accent-hover: #0035db;
+
+  /* Semantic Status Tokens */
+  --status-online: #10b981;
+  --status-online-ring: rgba(16, 185, 129, 0.2);
+  --status-offline: #f43f5e;
+  --pill-positive-bg: #ecfdf5;
+  --pill-positive-ink: #065f46;
+  --pill-positive-border: #a7f3d0;
+  --pill-negative-bg: #fff1f2;
+  --pill-negative-ink: #9f1239;
+  --pill-negative-border: #fecdd3;
+  --pill-warning-bg: #fffbeb;
+  --pill-warning-ink: #92400e;
+  --pill-warning-border: #fde68a;
+  --status-rose-on-dark: #fda4af;
+  --status-rose-on-dark-bg: rgba(244, 63, 94, 0.16);
+  --status-rose-on-dark-border: rgba(244, 63, 94, 0.42);
+  --status-emerald-on-dark: #a7f3d0;
+  --status-emerald-on-dark-border: rgba(16, 185, 129, 0.4);
+
+  /* Typography & Tight 6-Step Scale */
+  --font-display: 'Sora', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Consolas, monospace;
+  --font-serif: 'Instrument Serif', Georgia, serif;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.875rem;
+  --text-md: 0.9375rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.35rem;
+
+  /* Radii (4 Tokens) */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-card: 14px;
+  --radius-pill: 999px;
+
+  /* Elevation & Motion */
+  --shadow-card: 0 2px 6px rgba(35, 38, 59, 0.04);
+  --shadow-dark: 0 8px 24px rgba(17, 19, 32, 0.22);
+  --shadow-popover: 0 16px 36px -10px rgba(17, 19, 32, 0.16), 0 2px 8px rgba(35, 38, 59, 0.06);
+  --shadow-sticker: 0 12px 28px rgba(17, 19, 32, 0.28);
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --dur-press: 120ms;
+  --dur-ui: 180ms;
+  --dur-reveal: 360ms;
+
+  --measure-landing: 1240px;
+  --measure-app: 1160px;
+}

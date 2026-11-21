@@ -29,6 +29,9 @@ jobs:
       - name: Build production JavaScript
         run: npm run build
 
+      - name: Lint browser & tooling JavaScript
+        run: npm run lint:js
+
       - name: Run CashVM & HTTP API test suite
         run: npm run verify
 

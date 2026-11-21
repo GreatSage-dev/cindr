@@ -1,3 +1,5 @@
+import { existsSync, readFileSync } from 'node:fs';
+import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { MockNetworkProvider, type NetworkProvider } from 'cashscript';
 import { encodeCashAddress, hash160, hexToBin, secp256k1 } from '@bitauth/libauth';
@@ -18,7 +20,7 @@ import type {
   WalletOverviewResponse,
 } from '../src/api/types.js';
 
-describe('BLAZE Forge HTTP Backend API & Interface Verification Suite', () => {
+describe('cindr HTTP Backend API & Interface Verification Suite', () => {
   let instance: BlazeServerInstance;
   let baseUrl: string;
   let testUserAddress: string;
@@ -54,7 +56,7 @@ describe('BLAZE Forge HTTP Backend API & Interface Verification Suite', () => {
     expect(body.networkTarget).toBe('BCH_2026_05');
 
     // BlazeForge contract verification
-    expect(body.contracts.forge.name).toBe('BlazeForge');
+    expect(body.contracts.forge.name).toBe('cindr');
     expect(body.contracts.forge.bytecodeBytes).toBeGreaterThan(200);
     expect(body.contracts.forge.opcodesCount).toBe(
       BlazeForgeArtifact.bytecode.split(/\s+/).filter(Boolean).length
@@ -90,9 +92,9 @@ describe('BLAZE Forge HTTP Backend API & Interface Verification Suite', () => {
     expect(body.slots[14].id).toBe('demo-stamp-5');
 
     expect(body.tiers).toHaveLength(3);
-    expect(body.tiers[0]).toEqual({ id: 'medallion', min: 5, name: 'BLAZE Medallion' });
-    expect(body.tiers[1]).toEqual({ id: 'trophy', min: 9, name: 'BLAZE Trophy' });
-    expect(body.tiers[2]).toEqual({ id: 'trailblazer-trophy', min: 10, name: 'Trailblazer Trophy' });
+    expect(body.tiers[0]).toEqual({ id: 'medallion', min: 5, name: 'cindr Medallion' });
+    expect(body.tiers[1]).toEqual({ id: 'trophy', min: 9, name: 'cindr Trophy' });
+    expect(body.tiers[2]).toEqual({ id: 'trailblazer-trophy', min: 10, name: 'cindr Apex Trophy' });
   });
 
   it('3. GET /api/baton: Returns 0-conf mempool baton tracking state', async () => {
@@ -126,7 +128,8 @@ describe('BLAZE Forge HTTP Backend API & Interface Verification Suite', () => {
       'demo-stamp-5',
     ]);
     expect(body.stamps.map((s) => s.commitment)).toEqual(['01', '02', '03', '04', '05']);
-    expect(body.zeroConfChained).toBe(true);
+    // First claim spends the seeded dispenser baton; Test 6 verifies chained claim zeroConfChained: true.
+    expect(body.zeroConfChained).toBe(false);
     expect(body.nextBatonOutpoint).toBe(`${body.txid}:0`);
   });
 
@@ -145,7 +148,7 @@ describe('BLAZE Forge HTTP Backend API & Interface Verification Suite', () => {
     const body = (await res.json()) as ForgeResponse;
     expect(body.success).toBe(true);
     expect(body.trophy.tier).toBe(5);
-    expect(body.trophy.tierName).toBe('BLAZE Medallion');
+    expect(body.trophy.tierName).toBe('cindr Medallion');
     expect(body.trophy.burnedStampCount).toBe(5);
     expect(body.trophy.commitmentHex).toBe('050a0b0c0d0e');
     // First Forge transaction uses the seeded contract baton; Test 6 verifies chained Forge zeroConfChained: true.
@@ -172,6 +175,7 @@ describe('BLAZE Forge HTTP Backend API & Interface Verification Suite', () => {
     expect(claimRes.status).toBe(200);
     const claimBody = (await claimRes.json()) as ClaimStampsResponse;
     expect(claimBody.success).toBe(true);
+    expect(claimBody.zeroConfChained).toBe(true);
 
     // Immediately forge for User 2 (chains directly onto User 1's unconfirmed forge baton)
     const forgeRes = await fetch(`${baseUrl}/api/forge`, {
@@ -411,7 +415,7 @@ describe('BLAZE Forge HTTP Backend API & Interface Verification Suite', () => {
     expect(dashHtml.headers.get('Content-Type')).toContain('text/html');
     expect(dashHtml.headers.get('Content-Security-Policy')).toContain("script-src 'self'");
     const body = await dashHtml.text();
-    expect(body).toContain('Forge workspace');
+    expect(body).toContain('cindr workspace');
 
     const dashCss = await fetch(`${baseUrl}/dashboard.css`);
     expect(dashCss.status).toBe(200);
@@ -457,7 +461,7 @@ describe('BLAZE Forge HTTP Backend API & Interface Verification Suite', () => {
     expect(forgeRes.status).toBe(200);
     const forgeBody = (await forgeRes.json()) as ForgeResponse;
     expect(forgeBody.broadcasted).toBe(true);
-    expect(forgeBody.trophy.tierName).toBe('BLAZE Medallion');
+    expect(forgeBody.trophy.tierName).toBe('cindr Medallion');
 
     const afterView = (await (
       await fetch(`${baseUrl}/api/wallet?address=${encodeURIComponent(wallet.address)}`)
@@ -668,5 +672,180 @@ describe('BLAZE Forge HTTP Backend API & Interface Verification Suite', () => {
     expect(showcaseSlot?.category).toBe(activatedCat);
     expect(showcaseSlot?.activationStatus).toBe('live');
     expect(showcaseSlot?.name).toBe('Showcase Showoff');
+  });
+
+  it('28. Vercel static asset parity & security headers', () => {
+    const publicDir = path.join(process.cwd(), 'public');
+    for (const relPath of [
+      'vendor/three.module.js',
+      'vendor/three.core.js',
+      'tokens.css',
+      'favicon.svg',
+    ]) {
+      expect(existsSync(path.join(publicDir, relPath))).toBe(true);
+    }
+
+    for (const htmlFile of ['index.html', 'dashboard.html']) {
+      const html = readFileSync(path.join(publicDir, htmlFile), 'utf8');
+      const assetRefs = Array.from(
+        html.matchAll(/(?:href|src)="(\/[^"]+\.(?:css|js|svg))"/g),
+        (m) => m[1]
+      );
+      expect(assetRefs.length).toBeGreaterThan(0);
+      for (const ref of assetRefs) {
+        expect(existsSync(path.join(publicDir, ref.slice(1)))).toBe(true);
+      }
+    }
+
+    for (const jsFile of ['app.js', 'dashboard.js']) {
+      const js = readFileSync(path.join(publicDir, jsFile), 'utf8');
+      const vendorRefs = Array.from(js.matchAll(/['"](\/vendor\/[^'"]+)['"]/g), (m) => m[1]);
+      for (const ref of vendorRefs) {
+        expect(existsSync(path.join(publicDir, ref.slice(1)))).toBe(true);
+      }
+    }
+
+    const vercelConfig = JSON.parse(
+      readFileSync(path.join(process.cwd(), 'vercel.json'), 'utf8')
+    ) as {
+      headers: Array<{ source: string; headers: Array<{ key: string; value: string }> }>;
+    };
+    const rootRule = vercelConfig.headers.find((r) => r.source === '/(.*)');
+    const dashboardRule = vercelConfig.headers.find((r) => r.source === '/dashboard(.*)');
+    expect(rootRule).toBeDefined();
+    expect(dashboardRule).toBeDefined();
+
+    const rootHeaders = new Map(rootRule!.headers.map((h) => [h.key, h.value]));
+    expect(rootHeaders.get('X-Content-Type-Options')).toBe('nosniff');
+    expect(rootHeaders.get('X-Frame-Options')).toBe('DENY');
+    expect(rootHeaders.get('Referrer-Policy')).toBe('strict-origin-when-cross-origin');
+    expect(rootHeaders.get('Content-Security-Policy')).not.toContain("'wasm-unsafe-eval'");
+
+    const dashHeaders = new Map(dashboardRule!.headers.map((h) => [h.key, h.value]));
+    expect(dashHeaders.get('Content-Security-Policy')).toContain("'wasm-unsafe-eval'");
+  });
+
+  it('29. BatonMempoolTracker does not poison pendingCount on failed broadcast', async () => {
+    const provider = new MockNetworkProvider({ vmTarget: 'BCH_2026_05' });
+    const service = new BlazeBackendService({ provider, networkMode: 'mock' });
+    const wallet = await service.createDemoWallet();
+
+    provider.sendRawTransaction = async () => {
+      throw new Error('Simulated broadcast failure');
+    };
+
+    await expect(
+      service.claimDemoStamps({ recipientAddress: wallet.address })
+    ).rejects.toThrow('Simulated broadcast failure');
+    expect(service.batonTracker.pendingCount()).toBe(0);
+
+    const provider2 = new MockNetworkProvider({ vmTarget: 'BCH_2026_05' });
+    const service2 = new BlazeBackendService({ provider: provider2, networkMode: 'mock' });
+    const wallet2 = await service2.createDemoWallet();
+    await service2.claimDemoStamps({ recipientAddress: wallet2.address });
+    service2.batonTracker.clear();
+
+    provider2.sendRawTransaction = async () => {
+      throw new Error('Simulated forge broadcast failure');
+    };
+
+    await expect(
+      service2.forgeTrophy({ tier: 5, recipientAddress: wallet2.address })
+    ).rejects.toThrow('Simulated forge broadcast failure');
+    expect(service2.batonTracker.pendingCount()).toBe(0);
+  });
+
+  it('30. GET /api/wallet returns 503 on provider failure vs 422 on invalid address, and testSigners enforces FIFO cap', async () => {
+    const cappedService = new BlazeBackendService({
+      networkMode: 'mock',
+      maxSandboxSigners: 2,
+    });
+    await cappedService.createDemoWallet();
+    await cappedService.createDemoWallet();
+    await cappedService.createDemoWallet();
+    expect(cappedService.sandboxSignerCount()).toBe(2);
+
+    const failingProvider = new MockNetworkProvider({ vmTarget: 'BCH_2026_05' });
+    const tmpServer = await startServer(0, { provider: failingProvider, networkMode: 'mock' });
+    failingProvider.getUtxos = async () => {
+      throw new Error('Electrum offline');
+    };
+
+    try {
+      const badRes = await fetch(
+        `http://localhost:${tmpServer.port}/api/wallet?address=not-a-valid-address`
+      );
+      expect(badRes.status).toBe(422);
+      const badBody = (await badRes.json()) as { error: { code: string } };
+      expect(badBody.error.code).toBe('INVALID_ADDRESS');
+
+      const offlineRes = await fetch(
+        `http://localhost:${tmpServer.port}/api/wallet?address=${encodeURIComponent(testUserAddress)}`
+      );
+      expect(offlineRes.status).toBe(503);
+      const offlineBody = (await offlineRes.json()) as { error: { code: string } };
+      expect(offlineBody.error.code).toBe('PROVIDER_UNAVAILABLE');
+    } finally {
+      await tmpServer.close();
+    }
+  });
+
+  it('31. Styled HTML 404 card & split CSP headers', async () => {
+    const landingRes = await fetch(`${baseUrl}/`);
+    expect(landingRes.status).toBe(200);
+    const landingCsp = landingRes.headers.get('content-security-policy') ?? '';
+    expect(landingCsp).toContain("script-src 'self'");
+    expect(landingCsp).not.toContain("'wasm-unsafe-eval'");
+
+    const dashRes = await fetch(`${baseUrl}/dashboard`);
+    expect(dashRes.status).toBe(200);
+    const dashCsp = dashRes.headers.get('content-security-policy') ?? '';
+    expect(dashCsp).toContain("'wasm-unsafe-eval'");
+    expect(dashCsp).toContain('wss://relay.riften.net:443');
+
+    const notFoundRes = await fetch(`${baseUrl}/does-not-exist-check`, {
+      headers: { Accept: 'text/html' },
+    });
+    expect(notFoundRes.status).toBe(404);
+    const html = await notFoundRes.text();
+    expect(html).toContain('<title>Page not found — cindr</title>');
+    expect(html).toContain('/tokens.css');
+    expect(html).toContain('/dashboard.css');
+    expect(html).toContain('notfound-card');
+
+    const dashboardCss = readFileSync(
+      path.join(process.cwd(), 'public', 'dashboard.css'),
+      'utf8'
+    );
+    expect(dashboardCss).toContain('.notfound-card');
+    expect(dashboardCss).toContain('.notfound-body');
+  });
+
+  it('32. GET /api/baton returns 503 on provider failure and route aliases (/wallet, /wallet/demo) respond cleanly', async () => {
+    const failingProvider = new MockNetworkProvider({ vmTarget: 'BCH_2026_05' });
+    const tmpServer = await startServer(0, { provider: failingProvider, networkMode: 'mock' });
+    failingProvider.getUtxos = async () => {
+      throw new Error('Electrum connection reset');
+    };
+
+    try {
+      const batonRes = await fetch(`http://localhost:${tmpServer.port}/api/baton`);
+      expect(batonRes.status).toBe(503);
+      const batonBody = (await batonRes.json()) as { error: { code: string } };
+      expect(batonBody.error.code).toBe('PROVIDER_UNAVAILABLE');
+    } finally {
+      await tmpServer.close();
+    }
+
+    // Verify route alias without /api/ prefix
+    const walletAliasRes = await fetch(`${baseUrl}/wallet?address=${encodeURIComponent(testUserAddress)}`);
+    expect(walletAliasRes.status).toBe(200);
+
+    const demoAliasRes = await fetch(`${baseUrl}/wallet/demo`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+    expect(demoAliasRes.status).toBe(201);
   });
 });

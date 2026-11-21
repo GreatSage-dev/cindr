@@ -2,14 +2,17 @@
 <html lang="en" data-type="software">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f7f7fa">
   <meta name="page-type" content="software">
   <meta name="site-kind" content="software">
-  <title>Forge Workspace — cindr</title>
-  <meta name="description" content="Clean CashTokens workspace to claim Demo Stamps, forge Trophy NFTs in zero blocks, verify CashVM attack refusals, and inspect mempool batons.">
+  <title>cindr Workspace</title>
+  <meta name="description" content="Clean CashTokens workspace to claim Demo Stamps, mint Trophy NFTs in 0 blocks with cindr, verify CashVM attack refusals, and inspect mempool batons.">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/tokens.css">
   <link rel="stylesheet" href="/dashboard.css">
 </head>
 <body>
@@ -19,12 +22,12 @@
   <header class="topbar">
     <div class="topbar-inner">
       <div class="topbar-brand">
-        <a href="/dashboard" class="brand-lockup">
-          <svg class="brand-mark-svg" width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-            <polygon points="9,1.5 16,5.5 16,12.5 9,16.5 2,12.5 2,5.5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
-            <circle cx="9" cy="9" r="2.6" fill="var(--xenon-600)"/>
+        <a href="/dashboard" class="brand-lockup" aria-label="cindr workspace home">
+          <svg class="brand-mark-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M18 6A8 8 0 1 0 18 18" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+            <rect x="12" y="10" width="9" height="4" rx="2" fill="currentColor"/>
           </svg>
-          <span class="brand-name">cindr</span>
+          <span class="brand-name" translate="no">cindr</span>
         </a>
         <span class="brand-sep" aria-hidden="true">/</span>
         <a href="/" class="topbar-link">Overview</a>
@@ -69,10 +72,10 @@
                 <span class="wc-relay-tag" id="popover-wc-state-tag">WizardConnect</span>
               </div>
               <div class="popover-stack-btns">
-                <button type="button" class="btn-primary btn-full" id="btn-connect-live-wallet">
+                <button type="button" class="btn-secondary btn-full" id="btn-connect-live-wallet">
                   Connect BCH wallet (QR / App)
                 </button>
-                <button type="button" class="btn-secondary btn-full" id="btn-disconnect-live-wallet" hidden>
+                <button type="button" class="btn-danger-outline btn-full" id="btn-disconnect-live-wallet" hidden>
                   Disconnect live wallet
                 </button>
               </div>
@@ -88,6 +91,7 @@
               <p class="popover-hint">
                 1-click ephemeral sandbox wallet to test instant 0-conf baton handoff without a funded wallet.
               </p>
+              <p class="field-error" id="sandbox-wallet-error" aria-live="polite" hidden></p>
             </div>
 
             <div class="popover-section" id="popover-wallet-list-wrap" hidden>
@@ -101,14 +105,16 @@
                 <input
                   type="text"
                   id="input-custom-address"
+                  name="customAddress"
                   class="text-input mono-input"
-                  placeholder="bchtest:qq..."
+                  placeholder="bchtest:qq…"
+                  aria-describedby="custom-address-error"
                   autocomplete="off"
                   spellcheck="false"
                 >
                 <button type="submit" class="btn-secondary">Load</button>
               </div>
-              <p class="field-error" id="custom-address-error" hidden></p>
+              <p class="field-error" id="custom-address-error" aria-live="polite" hidden></p>
             </form>
           </div>
         </div>
@@ -120,12 +126,12 @@
     <!-- PAGE HEADER + GUIDED 3-STEP ONBOARDING STRIP -->
     <section class="page-head" aria-label="Workspace summary">
       <div class="page-head-copy">
-        <h1 class="page-title">Forge workspace</h1>
-        <p class="page-subline" id="workspace-finding">Checking wallet stamps against compiled CashVM covenant…</p>
+        <h1 class="page-title">cindr workspace</h1>
+        <p class="page-subline" id="workspace-finding" aria-live="polite">Checking wallet stamps against compiled <span translate="no">CashVM</span> covenant…</p>
         <ol class="onboarding-steps" aria-label="How to test cindr in 3 steps">
-          <li class="onboard-pill"><span class="onboard-idx">1</span>Claim 5 demo stamps</li>
-          <li class="onboard-pill"><span class="onboard-idx">2</span>Burn &amp; forge trophy (0-conf)</li>
-          <li class="onboard-pill"><span class="onboard-idx">3</span>Inspect receipt or test attacks</li>
+          <li class="onboard-step">1. Claim 5 demo stamps</li>
+          <li class="onboard-step">2. Burn &amp; mint trophy (0-conf)</li>
+          <li class="onboard-step">3. Inspect receipt or test attacks</li>
         </ol>
       </div>
       <div class="page-head-action">
@@ -135,7 +141,7 @@
       </div>
     </section>
 
-    <!-- ALGOLIA SEGMENTED PILL NAVIGATION -->
+    <!-- OPEN-GROUND UNDERLINE TABS -->
     <div class="tab-bar" role="tablist" aria-label="Workspace views">
       <button
         type="button"
@@ -146,8 +152,7 @@
         aria-controls="panel-forge"
         data-tab="forge"
       >
-        <span class="tab-step-dot">1</span>
-        Forge &amp; Claim
+        cindr &amp; Claim
       </button>
       <button
         type="button"
@@ -159,7 +164,6 @@
         data-tab="proofs"
         tabindex="-1"
       >
-        <span class="tab-step-dot">2</span>
         Proofs &amp; Attacks
       </button>
       <button
@@ -172,14 +176,13 @@
         data-tab="network"
         tabindex="-1"
       >
-        <span class="tab-step-dot">3</span>
         Network &amp; Registry
       </button>
     </div>
 
     <!-- TAB 1: FORGE (STAMPS, TIER, RECEIPT & ACTIVITY) -->
     <section id="panel-forge" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-forge">
-      <!-- Crisp 3-Metric Modular KPI Cards -->
+      <!-- Flat 1px-Ruled Ledger KPI Strip -->
       <div class="status-strip" aria-label="Wallet metrics">
         <div class="status-cell">
           <span class="status-label">Held stamps</span>
@@ -191,7 +194,7 @@
         </div>
         <div class="status-cell">
           <span class="status-label">Baton latency</span>
-          <span class="status-value num status-accent" id="kpi-latency">0 blocks</span>
+          <span class="status-value num" id="kpi-latency">0 blocks</span>
         </div>
       </div>
 
@@ -209,23 +212,23 @@
           <div class="tier-segmented" role="group" aria-label="Trophy tiers">
             <button type="button" class="seg-btn is-active" data-tier="5" aria-pressed="true">5 · Medallion</button>
             <button type="button" class="seg-btn" data-tier="9" aria-pressed="false">9 · Trophy</button>
-            <button type="button" class="seg-btn" data-tier="10" aria-pressed="false">10 · Trailblazer</button>
+            <button type="button" class="seg-btn" data-tier="10" aria-pressed="false">10 · Apex</button>
           </div>
 
           <!-- Signature Product Element: Crisp Stamp Slot Strip -->
           <div class="slot-strip" id="stamp-slot-strip" aria-live="polite"></div>
 
           <div class="action-bar">
-            <button type="button" class="btn-primary" id="btn-forge-action" disabled>
-              Forge BLAZE Medallion
+            <button type="button" class="btn-forge-dark" id="btn-forge-action" disabled>
+              Mint cindr Medallion
             </button>
             <button type="button" class="btn-secondary" id="btn-claim-action">
               Claim 5 demo stamps
             </button>
           </div>
 
-          <p class="action-note" id="action-readiness-note">
-            Demo Stamps fill slots 10–14 immediately with zero confirmation wait.
+          <p class="action-note" id="action-readiness-note" aria-live="polite">
+            Demo Stamps fill slots 10–14 immediately with 0&nbsp;confirmation wait.
           </p>
 
           <!-- Collapsible UTXO Inspector keeps workspace serene -->
@@ -255,7 +258,7 @@
           <div class="receipt-empty" id="dash-receipt-empty">
             <p class="empty-title">No transaction run yet</p>
             <p class="empty-desc">
-              Claim 5 Demo Stamps first, or forge a Trophy directly if your address already holds badges.
+              Claim 5 Demo Stamps first, or mint a Trophy directly if your address already holds badges.
             </p>
           </div>
 
@@ -355,13 +358,13 @@
           <div class="panel-header">
             <div>
               <h2 class="panel-title">Adversarial exploit tests</h2>
-              <p class="panel-sub">Runs live forged transactions through compiled <code>BlazeForge.cash</code>.</p>
+              <p class="panel-sub">Runs live exploit transactions through the compiled <code>cindr</code> covenant.</p>
             </div>
           </div>
           <div class="attack-list" role="group" aria-label="Select attack vector">
             <button type="button" class="attack-row is-selected" data-attack="under-count-4" aria-pressed="true">
               <span>
-                <strong class="attack-row-title">Forge with only 4 stamps</strong>
+                <strong class="attack-row-title">Mint with only 4 stamps</strong>
                 <span class="attack-row-sub">One badge short of the 5-stamp medallion threshold</span>
               </span>
               <code class="attack-line-tag">line 19</code>
@@ -376,7 +379,7 @@
             <button type="button" class="attack-row" data-attack="fake-category" aria-pressed="false">
               <span>
                 <strong class="attack-row-title">Inject unregistered token category</strong>
-                <span class="attack-row-sub">Substitutes a forged CashToken category for an official badge</span>
+                <span class="attack-row-sub">Substitutes an invalid CashToken category for an official badge</span>
               </span>
               <code class="attack-line-tag">line 58</code>
             </button>
@@ -401,7 +404,7 @@
           <div class="panel-header">
             <div>
               <h2 class="panel-title">CashVM verdict</h2>
-              <p class="panel-sub" id="dash-attack-label">Forge Medallion with only 4 Stamps</p>
+              <p class="panel-sub" id="dash-attack-label">Mint Medallion with only 4 Stamps</p>
             </div>
             <span class="pill-danger" id="dash-attack-pill">Rejected at line 19</span>
           </div>
@@ -523,7 +526,7 @@
       </p>
 
       <div class="wc-qr-stage" id="wc-qr-stage">
-        <canvas id="wc-qr-canvas" width="232" height="232" aria-label="Wallet pairing QR code"></canvas>
+        <canvas id="wc-qr-canvas" width="232" height="232" role="img" aria-label="Wallet pairing QR code"></canvas>
         <div class="wc-qr-loading" id="wc-qr-loading">
           <span class="wc-loading-label">Opening encrypted BCH relay…</span>
         </div>
@@ -531,7 +534,7 @@
 
       <div class="wc-modal-actions">
         <a
-          class="btn-primary wc-action-link"
+          class="btn-forge-dark wc-action-link"
           id="btn-wc-open-app"
           href="#"
           aria-disabled="true"
