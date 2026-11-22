@@ -1038,7 +1038,7 @@ async function createAndSelectSandboxWallet() {
 // ---------------------------------------------------------------------------
 async function ensureWcModule() {
   if (!state.wcModule) {
-    state.wcModule = await import('/vendor/wizardconnect.js');
+    state.wcModule = await import('./vendor/wizardconnect.js');
   }
   return state.wcModule;
 }
