@@ -422,8 +422,9 @@ function renderForgeWorkspace() {
     dom.btnHeaderPrimary.setAttribute('aria-busy', String(state.busy));
     if (!overview) {
       dom.workspaceFinding.textContent = 'Connect or create a sandbox wallet to begin.';
-      dom.btnHeaderPrimary.disabled = true;
-      dom.btnHeaderPrimary.textContent = 'Loading…';
+      dom.btnHeaderPrimary.disabled = false;
+      dom.btnHeaderPrimary.textContent = 'Connect wallet';
+      dom.btnHeaderPrimary.dataset.action = 'connect';
     } else if (canForgeSelected) {
       dom.workspaceFinding.textContent = `${distinctCount} distinct stamps held — ready to burn ${tierDef.need} and mint your ${tierDef.name} in 0 blocks.`;
       dom.btnHeaderPrimary.disabled = state.busy;
@@ -1530,7 +1531,8 @@ function wireEvents() {
   dom.btnForgeAction?.addEventListener('click', () => runForge());
   dom.btnHeaderPrimary?.addEventListener('click', () => {
     const action = dom.btnHeaderPrimary.dataset.action;
-    if (action === 'claim') runClaimStamps();
+    if (action === 'connect') openWalletPopover();
+    else if (action === 'claim') runClaimStamps();
     else if (action === 'forge-5') runForge(5);
     else runForge();
   });

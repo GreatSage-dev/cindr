@@ -11,6 +11,14 @@
     {
       "source": "/api/health",
       "destination": "/api/health.json"
+    },
+    {
+      "source": "/api/baton",
+      "destination": "/api/baton.json"
+    },
+    {
+      "source": "/api/registry",
+      "destination": "/api/registry.json"
     }
   ],
   "headers": [

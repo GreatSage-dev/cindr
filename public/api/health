@@ -10,7 +10,7 @@
       "redeemScriptBytes": 815,
       "redeemOpcodesCount": 203,
       "hasLaylaLoops": true,
-      "tokenAddress": "bchtest:rdl7dd0fhhupw4dd3yhvve5m25yr48gmykp40yjmd63av4r2nswuqhx4jnudn"
+      "tokenAddress": "bchtest:rdt42xwayuaptr4r6t6h4tv0pgf3l6vms9g5qz8mq7kpeahdzrp67fx0fdg6p"
     },
     "dispenser": {
       "name": "StampDispenser",
@@ -19,13 +19,13 @@
       "redeemScriptBytes": 125,
       "redeemOpcodesCount": 60,
       "hasLaylaLoops": true,
-      "tokenAddress": "bchtest:r06wr5p6h676qnw38x35z3qr2a28xr0g42l5ptxq7dp5m5d9gtxc2kmlu5vgq"
+      "tokenAddress": "bchtest:rd9xy6uszc5lazrlujxj00ceulx4thgctxre8xgmkslza4autf87zhp95zaxy"
     }
   },
   "zeroConfMempool": {
     "pendingTrackedOutpoints": 0,
     "explanation": "Powered by BCH 0-Conf Covenant Chaining: spent baton outputs chain directly in mempool without waiting 10 minutes for block confirmation."
   },
-  "uptimeSeconds": 3600,
-  "timestamp": "2026-11-22T15:17:18.856Z"
+  "uptimeSeconds": 0,
+  "timestamp": "2026-11-22T15:39:40.671Z"
 }

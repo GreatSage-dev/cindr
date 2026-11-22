@@ -1,0 +1,24 @@
+{
+  "status": "ok",
+  "network": "chipnet",
+  "forgeBaton": {
+    "category": "188e4725cf8db5d7b32004115e4507903bdd8631cc58835c75d99d7dbc88421d",
+    "tokenAddress": "bchtest:rdl7dd0fhhupw4dd3yhvve5m25yr48gmykp40yjmd63av4r2nswuqhx4jnudn",
+    "txid": "f391b9418a379eb4ca66f187cf96470e5953abfc24b4e06a6792664704291815",
+    "vout": 0,
+    "satoshis": 1000,
+    "commitment": "0x05",
+    "isConfirmed": true,
+    "pendingCount": 0
+  },
+  "dispenserBaton": {
+    "category": "2277df318b86087da01b47430ef8334b9f401ae0c5939aeb8564914337f602d0",
+    "tokenAddress": "bchtest:r06wr5p6h676qnw38x35z3qr2a28xr0g42l5ptxq7dp5m5d9gtxc2kmlu5vgq",
+    "txid": "e039184fd3fdff49c6220a967f61eba4d789f3ee59a9e008797d9acbd6bfba9a",
+    "vout": 0,
+    "satoshis": 1000,
+    "commitment": "0x",
+    "isConfirmed": true,
+    "pendingCount": 0
+  }
+}

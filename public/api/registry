@@ -1,0 +1,181 @@
+{
+  "forgeCategory": "aa424242424242424242424242424242424242424242424242424242424242cc",
+  "demoCategory": "dd999999999999999999999999999999999999999999999999999999999999ee",
+  "slots": [
+    {
+      "slot": 0,
+      "id": "paytaca-pioneer",
+      "name": "Paytaca Pioneer",
+      "category": "f1a9bd066b904eccfb10dc271abf669932a815420408e6c1f97f2a8b88944c1d",
+      "commitmentRule": null,
+      "kind": "official",
+      "activationStatus": "live"
+    },
+    {
+      "slot": 1,
+      "id": "template-titan",
+      "name": "Template Titan",
+      "category": "676b8d5cef572179e4633124eb0a873507b525c3053a7461518aafa90d076dd6",
+      "commitmentRule": null,
+      "kind": "official",
+      "activationStatus": "live"
+    },
+    {
+      "slot": 2,
+      "id": "selene-sorcerer",
+      "name": "Selene Sorcerer",
+      "category": "e2ca1f9374a0c299677654b9030076ab3d017c10beeb51f1d77edaf7c5a4baa0",
+      "commitmentRule": null,
+      "kind": "official",
+      "activationStatus": "live"
+    },
+    {
+      "slot": 3,
+      "id": "showcase-showoff",
+      "name": "Showcase Showoff (Staging)",
+      "category": "0404040404040404040404040404040404040404040404040404040404040404",
+      "commitmentRule": null,
+      "kind": "official",
+      "activationStatus": "staging"
+    },
+    {
+      "slot": 4,
+      "id": "consensus-contributor",
+      "name": "Consensus Contributor",
+      "category": "9762dd430954296c4ff2cc0745399ed479250e13d91fb206a350376ed994013b",
+      "commitmentRule": null,
+      "kind": "official",
+      "activationStatus": "live"
+    },
+    {
+      "slot": 5,
+      "id": "hidden-6",
+      "name": "Hidden #6 (Staging)",
+      "category": "0606060606060606060606060606060606060606060606060606060606060606",
+      "commitmentRule": null,
+      "kind": "official",
+      "activationStatus": "staging"
+    },
+    {
+      "slot": 6,
+      "id": "paryon-procurer",
+      "name": "Paryon Procurer (Staging)",
+      "category": "0707070707070707070707070707070707070707070707070707070707070707",
+      "commitmentRule": null,
+      "kind": "official",
+      "activationStatus": "staging",
+      "swapReferenceCategory": "2469acc5afa4b10cb5b5c04afb89c3a3ffd61c5da9c01e26d00951cae2a02544"
+    },
+    {
+      "slot": 7,
+      "id": "reward-revolutionary",
+      "name": "Reward Revolutionary",
+      "category": "96a7af30d09d500469533eb7c6e1295257549ca22f4def3a390c56c4d132fbbd",
+      "commitmentRule": null,
+      "kind": "official",
+      "activationStatus": "live"
+    },
+    {
+      "slot": 8,
+      "id": "blaze-builder",
+      "name": "cindr Builder (Staging)",
+      "category": "0909090909090909090909090909090909090909090909090909090909090909",
+      "commitmentRule": null,
+      "kind": "official",
+      "activationStatus": "staging"
+    },
+    {
+      "slot": 9,
+      "id": "trailblazer",
+      "name": "Genesis 2025",
+      "category": "cc080d0bf27a2b6c8d006a0f1f0c1695b485ed75caff5264b90c68e63f232ff4",
+      "commitmentRule": null,
+      "kind": "official",
+      "activationStatus": "live"
+    },
+    {
+      "slot": 10,
+      "id": "demo-stamp-1",
+      "name": "Demo Stamp #1",
+      "category": "dd999999999999999999999999999999999999999999999999999999999999ee",
+      "commitmentRule": 1,
+      "kind": "demo",
+      "activationStatus": "live"
+    },
+    {
+      "slot": 11,
+      "id": "demo-stamp-2",
+      "name": "Demo Stamp #2",
+      "category": "dd999999999999999999999999999999999999999999999999999999999999ee",
+      "commitmentRule": 2,
+      "kind": "demo",
+      "activationStatus": "live"
+    },
+    {
+      "slot": 12,
+      "id": "demo-stamp-3",
+      "name": "Demo Stamp #3",
+      "category": "dd999999999999999999999999999999999999999999999999999999999999ee",
+      "commitmentRule": 3,
+      "kind": "demo",
+      "activationStatus": "live"
+    },
+    {
+      "slot": 13,
+      "id": "demo-stamp-4",
+      "name": "Demo Stamp #4",
+      "category": "dd999999999999999999999999999999999999999999999999999999999999ee",
+      "commitmentRule": 4,
+      "kind": "demo",
+      "activationStatus": "live"
+    },
+    {
+      "slot": 14,
+      "id": "demo-stamp-5",
+      "name": "Demo Stamp #5",
+      "category": "dd999999999999999999999999999999999999999999999999999999999999ee",
+      "commitmentRule": 5,
+      "kind": "demo",
+      "activationStatus": "live"
+    }
+  ],
+  "tiers": [
+    {
+      "id": "medallion",
+      "min": 5,
+      "name": "cindr Medallion"
+    },
+    {
+      "id": "trophy",
+      "min": 9,
+      "name": "cindr Trophy"
+    },
+    {
+      "id": "trailblazer-trophy",
+      "min": 10,
+      "name": "cindr Apex Trophy"
+    }
+  ],
+  "presetCategories": {
+    "tokenhunt": [
+      "f1a9bd066b904eccfb10dc271abf669932a815420408e6c1f97f2a8b88944c1d",
+      "676b8d5cef572179e4633124eb0a873507b525c3053a7461518aafa90d076dd6",
+      "e2ca1f9374a0c299677654b9030076ab3d017c10beeb51f1d77edaf7c5a4baa0",
+      "0404040404040404040404040404040404040404040404040404040404040404",
+      "9762dd430954296c4ff2cc0745399ed479250e13d91fb206a350376ed994013b",
+      "0606060606060606060606060606060606060606060606060606060606060606",
+      "0707070707070707070707070707070707070707070707070707070707070707",
+      "96a7af30d09d500469533eb7c6e1295257549ca22f4def3a390c56c4d132fbbd",
+      "0909090909090909090909090909090909090909090909090909090909090909",
+      "cc080d0bf27a2b6c8d006a0f1f0c1695b485ed75caff5264b90c68e63f232ff4",
+      "dd999999999999999999999999999999999999999999999999999999999999ee",
+      "dd999999999999999999999999999999999999999999999999999999999999ee",
+      "dd999999999999999999999999999999999999999999999999999999999999ee",
+      "dd999999999999999999999999999999999999999999999999999999999999ee",
+      "dd999999999999999999999999999999999999999999999999999999999999ee"
+    ],
+    "paytacaLoyalty": [
+      "dd999999999999999999999999999999999999999999999999999999999999ee"
+    ]
+  }
+}
