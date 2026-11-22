@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en" data-type="software">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f7f7fa">
+  <meta name="page-type" content="software">
+  <meta name="site-kind" content="software">
+  <title>cindr — CashTokens Burn-to-Mint Loop Covenant</title>
+  <meta name="description" content="cindr replaces the missing trophy contract in tokenhunt.js with a May 2026 CashVM loop covenant and zero-confirmation baton chaining.">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/tokens.css">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <a href="#story" class="skip-link">Skip to content</a>
+
+  <main>
+    <!-- STAGE 1: FROSTED SLATE-SILVER STUDIO HERO + INTERACTIVE 3D FIBER-TO-IRIS -->
+    <section class="hero-scroll-stage" id="hero-stage" aria-label="Interactive fiber to iris overview">
+      <div class="hero-sticky-viewport" id="hero-card">
+        <canvas id="iris-canvas" class="iris-canvas" aria-hidden="true"></canvas>
+        <div class="iris-fallback-ring" aria-hidden="true"></div>
+
+        <header class="hero-header">
+          <div class="hero-brand-col">
+            <a href="#hero-stage" class="brand-mark" aria-label="cindr home">
+              <svg class="brand-mark-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M18 6A8 8 0 1 0 18 18" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                <rect x="12" y="10" width="9" height="4" rx="2" fill="currentColor"/>
+              </svg>
+              <span class="brand-wordmark" translate="no">cindr</span>
+            </a>
+            <span class="version-tag" id="network-tag" translate="no">bch_2026_05</span>
+          </div>
+
+          <nav class="hero-nav" aria-label="Page sections">
+            <a href="#story" class="hero-nav-link">Overview</a>
+            <a href="#covenant" class="hero-nav-link">Architecture</a>
+            <a href="#tiers" class="hero-nav-link">Tiers</a>
+            <a href="#proofs" class="hero-nav-link">Playground</a>
+            <a href="/dashboard" class="hero-nav-link hero-nav-link-emphasis">Workspace</a>
+          </nav>
+        </header>
+
+        <span class="hero-edge-tag" id="hero-edge-tag" aria-hidden="true">01.00</span>
+
+        <div class="hero-footer-grid">
+          <div class="hero-headline-slot">
+            <button type="button" class="hero-corner-toggle" id="btn-cycle-state" aria-label="Toggle stamps and iris animation state" title="Toggle fiber or iris state">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M9 3L5 7L9 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <h1 class="hero-headline" id="hero-headline">
+              <span class="hl-line hl-indent-1">5 Loose</span>
+              <span class="hl-line">Stamps</span>
+              <span class="hl-line hl-italic">into</span>
+              <span class="hl-line hl-indent-2">1 cindr</span>
+              <span class="hl-line hl-indent-3">Trophy</span>
+            </h1>
+          </div>
+
+          <div class="hero-state-center">
+            <a href="#story" class="hero-scroll-arrow" id="scroll-cue-link" aria-label="Scroll to product overview">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 2.5V13.5M8 13.5L4 9.5M8 13.5L12 9.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+          </div>
+
+          <div class="hero-meta-col">
+            <div class="hero-meta-header">
+              <div class="hero-controls-group">
+                <div class="morph-switch" role="group" aria-label="Fiber bundle morph state">
+                  <button type="button" class="morph-btn is-active" id="btn-state-a" data-target="0" aria-pressed="true">A</button>
+                  <button type="button" class="morph-btn" id="btn-state-b" data-target="1" aria-pressed="false">B</button>
+                </div>
+                <button type="button" class="motion-toggle-btn" id="btn-toggle-motion" aria-pressed="false">Pause motion</button>
+              </div>
+              <span class="hero-counter-tag" id="hero-counter-tag">001 / 002</span>
+            </div>
+            <p class="hero-lead" id="hero-lead">
+              Burn 5, 9, or 10 <span translate="no">TokenHunt</span> <span translate="no">CashTokens</span> in 1&nbsp;Layla loop transaction to mint a verified Trophy NFT with 0&nbsp;block delay.
+            </p>
+            <div class="hero-actions">
+              <a href="/dashboard" class="btn-hero-primary">Open cindr Workspace</a>
+              <a href="#proofs" class="btn-hero-pill">Test live refusal</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ALGOLIA-STYLE PROTOCOL PIPELINE SEAM -->
+    <section class="pipeline-seam" aria-label="Protocol pipeline stages">
+      <div class="container">
+        <ol class="pipeline-grid">
+          <li class="pipeline-step">
+            <span class="pipeline-num">01</span>
+            <div>
+              <strong class="pipeline-title">Collect or claim</strong>
+              <span class="pipeline-sub">5 free Demo Stamps (0-conf) or official TokenHunt NFTs</span>
+            </div>
+          </li>
+          <li class="pipeline-step">
+            <span class="pipeline-num">02</span>
+            <div>
+              <strong class="pipeline-title">Layla loop verification</strong>
+              <span class="pipeline-sub">CashVM <code>OP_BEGIN</code> / <code>OP_UNTIL</code> enforces unique ascending slots</span>
+            </div>
+          </li>
+          <li class="pipeline-step">
+            <span class="pipeline-num">03</span>
+            <div>
+              <strong class="pipeline-title">Consensus token burn</strong>
+              <span class="pipeline-sub">Output 2 guarantees <code>tokenCategory == 0x</code> forever</span>
+            </div>
+          </li>
+          <li class="pipeline-step">
+            <span class="pipeline-num">04</span>
+            <div>
+              <strong class="pipeline-title">0-block minting</strong>
+              <span class="pipeline-sub">Mempool baton chaining mints Trophy NFTs back-to-back</span>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <div class="editorial-flow">
+      <!-- SECTION 1 (#story): ALGOLIA FROST-ALABASTER STUDIO — UI-FIRST STEP CARDS + XENON TELEMETRY -->
+      <section class="band-frost" id="story">
+        <div class="container">
+          <div class="section-header-split">
+            <div>
+              <span class="section-eyebrow">Product overview · How <span translate="no">cindr</span> works</span>
+              <h2 class="section-heading">
+                5&nbsp;stamps in.<br>1&nbsp;permanent trophy out.
+              </h2>
+            </div>
+            <p class="section-lead">
+              Holders collect digital event badges inside <code translate="no">tokenhunt.js</code>, where clicking the reward button hits an unfinished stub. <strong translate="no">cindr</strong> supplies the missing Bitcoin Cash contract that checks your stamps, burns them on-chain, and mints a permanent Trophy NFT in 1&nbsp;click.
+            </p>
+          </div>
+
+          <div class="journey-grid">
+            <article class="ui-step-card reveal-card">
+              <div class="step-meta-row">
+                <span class="step-meta-label">Step 01 · Ingress</span>
+                <code class="step-meta-code">slots 10–14 · 0-conf</code>
+              </div>
+              <div class="step-body">
+                <h3 class="step-title">Collect or claim stamps</h3>
+                <p class="step-desc">Gather 5, 9, or 10 distinct event badges — or claim 5 free Demo Stamps in 1&nbsp;click if your wallet starts empty.</p>
+              </div>
+              <span class="step-footnote" translate="no">StampDispenser.cash · 0-conf faucet</span>
+            </article>
+
+            <article class="ui-step-card reveal-card">
+              <div class="step-meta-row">
+                <span class="step-meta-label">Step 02 · Loop</span>
+                <code class="step-meta-code" translate="no">OP_BEGIN · vout[2] burn</code>
+              </div>
+              <div class="step-body">
+                <h3 class="step-title">Verify and burn in 1&nbsp;loop</h3>
+                <p class="step-desc">1 Bitcoin Cash transaction proves every stamp slot is unique and destroys those tokens forever so nobody can double-claim.</p>
+              </div>
+              <span class="step-footnote" translate="no">cindr covenant · OP_BEGIN / OP_UNTIL</span>
+            </article>
+
+            <article class="ui-step-card reveal-card">
+              <div class="step-meta-row">
+                <span class="step-meta-label">Step 03 · Output</span>
+                <code class="step-meta-code" translate="no">vout[0] baton · vout[1] NFT</code>
+              </div>
+              <div class="step-body">
+                <h3 class="step-title">Mint with 0&nbsp;block waiting</h3>
+                <p class="step-desc">Normally a shared minting key forces a 10-minute wait per person. <span translate="no">cindr</span> passes the key forward in mempool for instant back-to-back mints.</p>
+              </div>
+              <span class="step-footnote" translate="no">BatonMempoolTracker · 0s wait</span>
+            </article>
+          </div>
+
+          <div class="telemetry-bar reveal-card">
+            <div class="telemetry-cell">
+              <div class="metric-value num" id="metric-script-bytes">815</div>
+              <span class="metric-label">Redeem script bytes</span>
+              <p class="metric-detail" id="metric-script-detail">Instantiated P2SH32 covenant (203&nbsp;opcodes).</p>
+            </div>
+
+            <div class="telemetry-cell">
+              <div class="metric-value num">0s</div>
+              <span class="metric-label">Block wait</span>
+              <p class="metric-detail">Unconfirmed baton chaining in Bitcoin Cash mempool.</p>
+            </div>
+
+            <div class="telemetry-cell">
+              <div class="metric-value num" id="metric-vm-target">100%</div>
+              <span class="metric-label"><span translate="no">CashVM</span> verified</span>
+              <p class="metric-detail" id="metric-vm-detail">Deterministic loop, burn, and API suite on <span translate="no">BCH_2026_05</span>.</p>
+            </div>
+
+            <div class="telemetry-cell">
+              <div class="metric-value num">15.0%</div>
+              <span class="metric-label">VM budget used</span>
+              <p class="metric-detail">103,786 of 692,800 OpCost for a 5-stamp fusion.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 2 (#covenant): DEEP XENON NAVY — BEFORE / AFTER CODE COMPARISON -->
+      <section class="band-xenon" id="covenant">
+        <div class="container">
+          <div class="section-header-split">
+            <div>
+              <span class="section-eyebrow eyebrow-on-dark">Architecture contrast · Consensus vs UI</span>
+              <h2 class="section-heading heading-on-dark">
+                Browser checks can be faked.<br>Bitcoin Cash loops cannot.
+              </h2>
+            </div>
+            <p class="section-lead lead-on-dark">
+              Checking event badges only inside website JavaScript leaves wallets stalled or open to cheats. Moving the check into an on-chain CashVM loop makes the rules automatic and unstoppable.
+            </p>
+          </div>
+
+          <div class="split-grid">
+            <article class="contrast-panel contrast-panel-muted reveal-card">
+              <div class="contrast-head-row">
+                <h3 class="contrast-title">Today’s browser stub</h3>
+                <span class="contrast-pill contrast-pill-muted">Blocked in UI</span>
+              </div>
+              <ul class="contrast-list">
+                <li><strong>Hits a dead end:</strong> Clicking the reward button inside <code translate="no">tokenhunt.js</code> stops at a missing trophy contract message.</li>
+                <li><strong>10-minute crowd stall:</strong> A naive shared minting key blocks everyone else until miners confirm the next block.</li>
+                <li><strong>Easy to bypass:</strong> Client-side JavaScript alone cannot prevent a user from reusing the same badge twice.</li>
+              </ul>
+              <div class="contrast-code-wrap">
+                <span class="win-file" translate="no">bchblaze.cash/js/tokenhunt.js</span>
+                <pre class="contrast-code" translate="no">function buildForgeTx(utxos, tier) {
+  // TODO: wire up once contract exists
+  throw new Error("Trophy contract not connected");
+}</pre>
+              </div>
+            </article>
+
+            <article class="contrast-panel contrast-panel-active reveal-card">
+              <div class="contrast-head-row">
+                <h3 class="contrast-title"><span translate="no">cindr</span> covenant</h3>
+                <span class="contrast-pill contrast-pill-valid">Enforced by <span translate="no">CashVM</span></span>
+              </div>
+              <ul class="contrast-list">
+                <li><strong>Strict ascending check:</strong> The May 2026 loop proves every input slot strictly increases (<code>slot &gt; prevSlot</code>).</li>
+                <li><strong>Guaranteed token burn:</strong> Output 2 must carry 0 token categories (<code>tokenCategory == 0x</code>), destroying spent stamps forever.</li>
+                <li><strong>0-wait baton handoff:</strong> Output 0 keeps the minting key pinned at input 0 and live in mempool for back-to-back mints.</li>
+              </ul>
+              <div class="contrast-code-wrap">
+                <span class="win-file" translate="no">cindr covenant · May 2026</span>
+                <pre class="contrast-code" translate="no">do {
+  require(slot &gt; prevSlot);
+  require(actualCat == expectedCat);
+  i = i + 1;
+} while (i &lt;= tier);</pre>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 3 (#tiers): FROST ALABASTER STUDIO — TIERED TROPHY PEDESTALS -->
+      <section class="band-frost" id="tiers">
+        <div class="container">
+          <div class="section-header-split">
+            <div>
+              <span class="section-eyebrow">On-chain commitments · Trophy tiers</span>
+              <h2 class="section-heading">
+                3&nbsp;tiers, sealed forever<br>inside each trophy.
+              </h2>
+            </div>
+            <p class="section-lead">
+              Every minted NFT carries its burned stamp slots baked directly into its immutable <span translate="no">CashTokens</span> commitment bytes. Select Inspect fixture receipt on any card to check its verified <span translate="no">CashVM</span> output.
+            </p>
+          </div>
+
+          <div class="tiers-grid">
+            <article class="tier-card reveal-card">
+              <div class="tier-top-row">
+                <span class="tier-count-badge">5 Stamps</span>
+                <span class="tier-rank-pill">Tier 5</span>
+              </div>
+              <div class="tier-copy-wrap">
+                <h3 class="tier-title">cindr Medallion</h3>
+                <p class="tier-subtitle">Starter tier · works with Demo Stamps</p>
+                <p class="tier-rule">Burns any 5 distinct registered badges or 1-click Demo Stamps in strict slot order.</p>
+                <p class="tier-commitment-line">
+                  <span class="tier-commit-label">Commitment</span>
+                  <code translate="no">05 · 0a 0b 0c 0d 0e</code>
+                </p>
+              </div>
+              <div class="tier-bottom">
+                <div class="tier-stats">
+                  <span class="num">1,770 bytes</span>
+                  <span class="num">2,655 sats fee</span>
+                </div>
+                <button type="button" class="tier-receipt-btn" aria-expanded="false">Inspect fixture receipt</button>
+              </div>
+              <div class="tier-sticker" aria-label="Verified Tier 5 fixture receipt">
+                <span class="tier-sticker-head">Tier 5 commitment fixture</span>
+                <span class="tier-sticker-hex" translate="no">0x050a0b0c0d0e</span>
+                <span class="tier-sticker-meta" translate="no">opcost: 103,786 / 692,800<br>tx: 67ab3afe…799f40</span>
+              </div>
+            </article>
+
+            <article class="tier-card reveal-card">
+              <div class="tier-top-row">
+                <span class="tier-count-badge">9 Stamps</span>
+                <span class="tier-rank-pill">Tier 9</span>
+              </div>
+              <div class="tier-copy-wrap">
+                <h3 class="tier-title">cindr Trophy</h3>
+                <p class="tier-subtitle">Full official <span translate="no">TokenHunt</span> completion</p>
+                <p class="tier-rule">Burns all 9 official BCH ecosystem project badges verified on-chain inside 1&nbsp;loop.</p>
+                <p class="tier-commitment-line">
+                  <span class="tier-commit-label">Commitment</span>
+                  <code translate="no">09 · 00 01 … 07 08</code>
+                </p>
+              </div>
+              <div class="tier-bottom">
+                <div class="tier-stats">
+                  <span class="num">2,342 bytes</span>
+                  <span class="num">3,513 sats fee</span>
+                </div>
+                <button type="button" class="tier-receipt-btn" aria-expanded="false">Inspect fixture receipt</button>
+              </div>
+              <div class="tier-sticker" aria-label="Verified Tier 9 fixture receipt">
+                <span class="tier-sticker-head">Tier 9 commitment fixture</span>
+                <span class="tier-sticker-hex" translate="no">0x09000102030405060708</span>
+                <span class="tier-sticker-meta" translate="no">opcost: 175,590 / 696,000<br>tx: d33afce0…ec1e7a</span>
+              </div>
+            </article>
+
+            <article class="tier-card reveal-card">
+              <div class="tier-top-row">
+                <span class="tier-count-badge">10 Stamps</span>
+                <span class="tier-rank-pill">Tier 10</span>
+              </div>
+              <div class="tier-copy-wrap">
+                <h3 class="tier-title">cindr Apex Trophy</h3>
+                <p class="tier-subtitle">Maximum rank · under <span translate="no">CashVM</span> limit</p>
+                <p class="tier-rule">Burns all 10 distinct registered badges inside 1&nbsp;transaction within opcode limits.</p>
+                <p class="tier-commitment-line">
+                  <span class="tier-commit-label">Commitment</span>
+                  <code translate="no">0a · 00 01 … 08 09</code>
+                </p>
+              </div>
+              <div class="tier-bottom">
+                <div class="tier-stats">
+                  <span class="num">2,485 bytes</span>
+                  <span class="num">3,728 sats fee</span>
+                </div>
+                <button type="button" class="tier-receipt-btn" aria-expanded="false">Inspect fixture receipt</button>
+              </div>
+              <div class="tier-sticker" aria-label="Verified Tier 10 fixture receipt">
+                <span class="tier-sticker-head">Tier 10 commitment fixture</span>
+                <span class="tier-sticker-hex" translate="no">0x0a00010203040506070809</span>
+                <span class="tier-sticker-meta" translate="no">opcost: 193,079 / 696,800<br>tx: 0db90267…8a2357</span>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 4 (#proofs): ALGOLIA LIVE API & CASHVM REFUSAL PLAYGROUND -->
+      <section class="band-frost-alt" id="proofs">
+        <div class="container">
+          <div class="section-header-split">
+            <div>
+              <span class="section-eyebrow">Interactive verifier · <span translate="no">POST /api/attack</span></span>
+              <h2 class="section-heading">
+                Try breaking the rules.<br>Watch Bitcoin Cash refuse.
+              </h2>
+            </div>
+            <p class="section-lead">
+              Select any cheat below. Our server constructs the invalid transaction and runs it live via <code translate="no">POST /api/attack</code> against the compiled <code translate="no">cindr</code> covenant.
+            </p>
+          </div>
+
+          <div class="proof-grid">
+            <div class="attack-selector-list" role="group" aria-label="Adversarial exploit vectors">
+              <button type="button" class="attack-btn is-selected" data-attack="under-count-4" aria-pressed="true">
+                <span class="attack-index num">01</span>
+                <div class="attack-btn-text">
+                  <span class="attack-btn-label">Mint with only 4 stamps</span>
+                  <span class="attack-btn-sub">Tries to mint a 5-stamp medallion with 1&nbsp;badge short</span>
+                </div>
+                <span class="attack-btn-tag num">line 19</span>
+              </button>
+
+              <button type="button" class="attack-btn" data-attack="duplicate-slot" aria-pressed="false">
+                <span class="attack-index num">02</span>
+                <div class="attack-btn-text">
+                  <span class="attack-btn-label">Reuse duplicate Stamp #1</span>
+                  <span class="attack-btn-sub">Submits copies of the same stamp 5&nbsp;times instead of 5 unique ones</span>
+                </div>
+                <span class="attack-btn-tag num">line 45</span>
+              </button>
+
+              <button type="button" class="attack-btn" data-attack="fake-category" aria-pressed="false">
+                <span class="attack-index num">03</span>
+                <div class="attack-btn-text">
+                  <span class="attack-btn-label">Inject unregistered token category</span>
+                  <span class="attack-btn-sub">Substitutes a homemade fake <span translate="no">CashToken</span> for an official event badge</span>
+                </div>
+                <span class="attack-btn-tag num">line 58</span>
+              </button>
+
+              <button type="button" class="attack-btn" data-attack="anti-burn-keep-stamps" aria-pressed="false">
+                <span class="attack-index num">04</span>
+                <div class="attack-btn-text">
+                  <span class="attack-btn-label">Keep Stamp #5 in change output</span>
+                  <span class="attack-btn-sub">Tries to refund a stamp to the user after minting instead of burning it</span>
+                </div>
+                <span class="attack-btn-tag num">line 81</span>
+              </button>
+
+              <button type="button" class="attack-btn" data-attack="steal-baton" aria-pressed="false">
+                <span class="attack-index num">05</span>
+                <div class="attack-btn-text">
+                  <span class="attack-btn-label">Redirect Minting Baton to attacker</span>
+                  <span class="attack-btn-sub">Attempts to steal the contract’s trophy-minting key to a private wallet</span>
+                </div>
+                <span class="attack-btn-tag num">line 26</span>
+              </button>
+            </div>
+
+            <div class="proof-receipt-panel" id="proof-receipt-panel" aria-live="polite">
+              <div class="terminal-chrome">
+                <span class="terminal-endpoint" translate="no">POST /api/attack · CashVM Interpreter</span>
+              </div>
+              <div class="receipt-top-row">
+                <span class="receipt-status" id="receipt-status">Rejected at line 19</span>
+                <div class="receipt-top-meta">
+                  <span class="receipt-timing" id="receipt-timing">Verified receipt</span>
+                  <button type="button" class="receipt-retry-btn" id="btn-retry-attack" hidden>Retry</button>
+                </div>
+              </div>
+              <p class="receipt-plain" id="receipt-plain">
+                Blocked — the contract unlocks only when you submit 5, 9, or 10 distinct stamps, not 4.
+              </p>
+              <p class="receipt-rule-line" id="receipt-rule" translate="no">require(tier == 5 || tier == 9 || tier == 10)</p>
+              <pre class="receipt-vm-output" id="receipt-vm-error" translate="no">cindr:19 Require statement failed at input 0 at line 19.
+Failing statement: require(tier == 5 || tier == 9 || tier == 10);</pre>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-cta-card">
+        <div class="footer-inner">
+          <div>
+            <span class="section-eyebrow eyebrow-on-dark">Interactive sandbox &amp; live Chipnet</span>
+            <h2 class="footer-title">Claim 5&nbsp;stamps.<br>Mint your trophy in 0&nbsp;blocks.</h2>
+            <p class="footer-sub">Open the clean cindr workspace to claim Demo Stamps, pair <span translate="no">WizardConnect</span>, run verified loop mints, and inspect mempool baton chaining live.</p>
+          </div>
+          <div class="footer-actions">
+            <a href="/dashboard" class="footer-btn-primary">Open cindr Workspace</a>
+            <a href="#hero-stage" class="footer-link-quiet">Back to top</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-colophon">
+        <span translate="no">cindr · Bitcoin Cash 2026</span>
+        <span>Layla <span translate="no">CashVM</span> Loops · Strict Ascending Slot Covenant</span>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

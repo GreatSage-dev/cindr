@@ -4,6 +4,14 @@
   "cleanUrls": true,
   "rewrites": [
     {
+      "source": "/",
+      "destination": "/landing.html"
+    },
+    {
+      "source": "/index.html",
+      "destination": "/landing.html"
+    },
+    {
       "source": "/dashboard",
       "destination": "/dashboard.html"
     }
