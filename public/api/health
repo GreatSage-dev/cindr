@@ -1,0 +1,31 @@
+{
+  "status": "healthy",
+  "networkMode": "chipnet",
+  "networkTarget": "BCH_2026_05",
+  "contracts": {
+    "forge": {
+      "name": "cindr",
+      "bytecodeBytes": 283,
+      "opcodesCount": 273,
+      "redeemScriptBytes": 815,
+      "redeemOpcodesCount": 203,
+      "hasLaylaLoops": true,
+      "tokenAddress": "bchtest:rdl7dd0fhhupw4dd3yhvve5m25yr48gmykp40yjmd63av4r2nswuqhx4jnudn"
+    },
+    "dispenser": {
+      "name": "StampDispenser",
+      "bytecodeBytes": 92,
+      "opcodesCount": 88,
+      "redeemScriptBytes": 125,
+      "redeemOpcodesCount": 60,
+      "hasLaylaLoops": true,
+      "tokenAddress": "bchtest:r06wr5p6h676qnw38x35z3qr2a28xr0g42l5ptxq7dp5m5d9gtxc2kmlu5vgq"
+    }
+  },
+  "zeroConfMempool": {
+    "pendingTrackedOutpoints": 0,
+    "explanation": "Powered by BCH 0-Conf Covenant Chaining: spent baton outputs chain directly in mempool without waiting 10 minutes for block confirmation."
+  },
+  "uptimeSeconds": 3600,
+  "timestamp": "2026-11-22T15:17:18.856Z"
+}
