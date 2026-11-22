@@ -1,28 +1,40 @@
 {
-  "status": "awaiting_faucet_funding",
-  "checkedAt": "2026-11-19T21:06:42.521Z",
+  "status": "deployed_and_verified_on_chipnet",
+  "deployedAt": "2026-11-22T00:50:51.619Z",
   "network": "chipnet",
-  "chipnetBlockHeight": 338966,
+  "chipnetBlockHeight": 342177,
   "deployer": {
     "cashAddress": "bchtest:qpxk7hkhr5l0zsv8sakdgauqhmc8sts3g5yxp4hvrj",
-    "tokenAddress": "bchtest:zpxk7hkhr5l0zsv8sakdgauqhmc8sts3g5rvjte2up",
-    "currentBalanceSats": 0,
-    "minimumRequiredSats": 12000,
-    "keyStoredLocallyIn": ".chipnet-deployer.json"
+    "tokenAddress": "bchtest:zpxk7hkhr5l0zsv8sakdgauqhmc8sts3g5rvjte2up"
   },
-  "compiledContracts": {
+  "categories": {
+    "forgeCategory": "188e4725cf8db5d7b32004115e4507903bdd8631cc58835c75d99d7dbc88421d",
+    "demoCategory": "2277df318b86087da01b47430ef8334b9f401ae0c5939aeb8564914337f602d0"
+  },
+  "contracts": {
     "blazeForge": {
+      "address": "bchtest:pdl7dd0fhhupw4dd3yhvve5m25yr48gmykp40yjmd63av4r2nswuq94fn2a5c",
+      "tokenAddress": "bchtest:rdl7dd0fhhupw4dd3yhvve5m25yr48gmykp40yjmd63av4r2nswuqhx4jnudn",
       "redeemScriptBytes": 815,
-      "redeemOpcodesCount": 203
+      "redeemOpcodesCount": 203,
+      "genesisBatonTxid": "f391b9418a379eb4ca66f187cf96470e5953abfc24b4e06a6792664704291815"
     },
     "stampDispenser": {
+      "address": "bchtest:p06wr5p6h676qnw38x35z3qr2a28xr0g42l5ptxq7dp5m5d9gtxc2ygradd3t",
+      "tokenAddress": "bchtest:r06wr5p6h676qnw38x35z3qr2a28xr0g42l5ptxq7dp5m5d9gtxc2kmlu5vgq",
       "redeemScriptBytes": 125,
-      "redeemOpcodesCount": 60
+      "redeemOpcodesCount": 60,
+      "genesisBatonTxid": "e039184fd3fdff49c6220a967f61eba4d789f3ee59a9e008797d9acbd6bfba9a"
     }
   },
-  "faucets": [
-    "https://tbch.googol.cash/",
-    "https://chipnet.bch.ninja/"
-  ],
-  "nextStepCommand": "npm run deploy:chipnet"
+  "zeroConfVerificationTxs": {
+    "claim5DemoStampsTxid": "bcaadb3546bd8e0a36d0dabe18fbf82a3d432cb1e3d1e441de8625cc00f0a039",
+    "forgeTier5MedallionTxid": "6e0897ecc279bb338b693a5a02e7234a5e85b6afbab2f830990b4ba970a4fc33",
+    "trophyCommitmentHex": "050a0b0c0d0e"
+  },
+  "envConfig": {
+    "BCH_NETWORK": "chipnet",
+    "FORGE_CATEGORY": "188e4725cf8db5d7b32004115e4507903bdd8631cc58835c75d99d7dbc88421d",
+    "DEMO_CATEGORY": "2277df318b86087da01b47430ef8334b9f401ae0c5939aeb8564914337f602d0"
+  }
 }

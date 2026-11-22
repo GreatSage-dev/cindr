@@ -29,6 +29,52 @@ const LOCAL_KEY_FILE = path.resolve('.chipnet-deployer.json');
 const EVIDENCE_FILE = path.resolve('evidence', 'chipnet-deployment.json');
 const MIN_DEPLOY_SATS = 12_000n;
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function connectWithRetry(
+  provider: ElectrumNetworkProvider,
+  maxAttempts = 5
+): Promise<void> {
+  let lastErr: unknown;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      await provider.connect();
+      return;
+    } catch (err: unknown) {
+      lastErr = err;
+      const msg = err instanceof Error ? err.message : String(err);
+      console.warn(
+        `[deploy:chipnet] Connection attempt ${attempt}/${maxAttempts} failed (${msg}); retrying in 2s...`
+      );
+      if (attempt < maxAttempts) {
+        await sleep(2000);
+      }
+    }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error(String(lastErr));
+}
+
+async function waitForUtxos(
+  provider: ElectrumNetworkProvider,
+  address: string,
+  predicate: (utxos: SpendableUtxo[]) => boolean,
+  attempts = 10,
+  delayMs = 1500
+): Promise<SpendableUtxo[]> {
+  for (let i = 0; i < attempts; i++) {
+    const list = await provider.getUtxos(address);
+    if (predicate(list)) {
+      return list;
+    }
+    if (i < attempts - 1) {
+      await sleep(delayMs);
+    }
+  }
+  return provider.getUtxos(address);
+}
+
 interface DeployerKeyStore {
   createdAt: string;
   network: 'chipnet';
@@ -137,7 +183,13 @@ async function ensureVoutZeroGenesisInput(
     satoshis: vout0Sats,
     lockingBytecode: binToHex(addressToLockingBytecode(deployer.cashAddress)),
   };
-  const refreshed = (await provider.getUtxos(deployer.cashAddress)).filter(
+  await sleep(1500);
+  const allAfterPrep = await waitForUtxos(
+    provider,
+    deployer.cashAddress,
+    (list) => list.some((u) => u.txid === sentPrep.txid)
+  );
+  const refreshed = allAfterPrep.filter(
     (u) => !u.token && !(u.txid === sentPrep.txid && u.vout === 0)
   );
   return { genesisInput, remainingBchUtxos: refreshed };
@@ -147,11 +199,17 @@ async function main() {
   await mkdir(path.dirname(EVIDENCE_FILE), { recursive: true });
   const deployer = await loadOrCreateDeployer();
   const signer = new SignatureTemplate(hexToBin(deployer.privKeyHex));
-  const provider = new ElectrumNetworkProvider('chipnet');
+  const hostname = process.env.ELECTRUM_HOSTNAME?.trim() || 'chipnet.bch.ninja';
+  const provider = new ElectrumNetworkProvider('chipnet', {
+    hostname,
+    manualConnectionManagement: true,
+  });
 
-  console.log('[deploy:chipnet] Connecting to BCH Chipnet Electrum network...');
-  const blockHeight = await provider.getBlockHeight();
-  const utxos = await provider.getUtxos(deployer.cashAddress);
+  console.log(`[deploy:chipnet] Connecting to BCH Chipnet Electrum (${hostname})...`);
+  await connectWithRetry(provider, 5);
+  try {
+    const blockHeight = await provider.getBlockHeight();
+    const utxos = await provider.getUtxos(deployer.cashAddress);
   const pureBchUtxos = utxos.filter((u) => !u.token);
   const bchBalanceSats = pureBchUtxos.reduce((s, u) => s + u.satoshis, 0n);
 
@@ -206,7 +264,7 @@ async function main() {
     console.log('     Faucets: https://tbch.googol.cash/ or https://chipnet.bch.ninja/');
     console.log('  2. Re-run: npm run deploy:chipnet');
     console.log(`  3. Pre-flight receipt written to: ${EVIDENCE_FILE}`);
-    process.exit(0);
+    return;
   }
 
   // Step 1: Mint Genesis Baton for StampDispenser (`DEMO_CATEGORY`)
@@ -241,9 +299,16 @@ async function main() {
   console.log(`  -> StampDispenser Genesis Txid : ${demoGenTx.txid}`);
   console.log(`  -> DEMO_CATEGORY               : ${demoCategory}`);
 
+  await sleep(1500);
+  await waitForUtxos(provider, dispenser.tokenAddress, (list) =>
+    list.some((u) => u.txid === demoGenTx.txid && u.vout === 0)
+  );
+  const currentUtxos2 = await waitForUtxos(provider, deployer.cashAddress, (list) =>
+    !list.some((u) => u.txid === demoGenInput.txid && u.vout === demoGenInput.vout)
+  );
+
   // Step 2: Mint Genesis Baton for BlazeForge (`FORGE_CATEGORY`)
   console.log('\n[deploy:chipnet] Step 2/4: Minting BlazeForge Genesis Baton NFT on Chipnet...');
-  const currentUtxos2 = await provider.getUtxos(deployer.cashAddress);
   const { genesisInput: forgeGenInput, remainingBchUtxos: afterForgePrep } =
     await ensureVoutZeroGenesisInput(provider, deployer, signer, currentUtxos2, usedOutpoints);
   usedOutpoints.add(`${forgeGenInput.txid}:${forgeGenInput.vout}`);
@@ -278,10 +343,18 @@ async function main() {
   console.log(`  -> BlazeForge Genesis Txid     : ${forgeGenTx.txid}`);
   console.log(`  -> FORGE_CATEGORY              : ${forgeCategory}`);
 
+  await sleep(1500);
+  await waitForUtxos(provider, forge.tokenAddress, (list) =>
+    list.some((u) => u.txid === forgeGenTx.txid && u.vout === 0)
+  );
+  const utxosAfterForgeGen = await waitForUtxos(provider, deployer.cashAddress, (list) =>
+    !list.some((u) => u.txid === forgeGenInput.txid && u.vout === forgeGenInput.vout)
+  );
+
   // Step 3: 0-Conf Live Claim of 5 Demo Stamp NFTs on Chipnet
   console.log('\n[deploy:chipnet] Step 3/4: Executing 0-Conf StampDispenser.claim5 on Chipnet...');
   const tracker = new BatonMempoolTracker();
-  const feeUtxosForClaim = (await provider.getUtxos(deployer.cashAddress)).filter((u) => !u.token);
+  const feeUtxosForClaim = utxosAfterForgeGen.filter((u) => !u.token);
   const claimBuilt = await buildClaimDemoStampsTx({
     provider,
     forgeCategory,
@@ -296,10 +369,19 @@ async function main() {
   const claimSent = await claimBuilt.builder.send();
   console.log(`  -> 0-Conf Claim5 Txid          : ${claimSent.txid}`);
 
-  // Step 4: 0-Conf Live Forge of Tier-5 BLAZE Medallion NFT on Chipnet
+  await sleep(1500);
+  const liveAfterClaim = await waitForUtxos(
+    provider,
+    deployer.tokenAddress,
+    (list) =>
+      list.filter(
+        (u) => u.txid === claimSent.txid && u.token?.category.toLowerCase() === demoCategory
+      ).length >= 5
+  );
+
+  // Step 4: 0-Conf Live Forge of Tier-5 cindr Medallion NFT on Chipnet
   console.log('\n[deploy:chipnet] Step 4/4: Executing 0-Conf BlazeForge.forge (Tier 5) on Chipnet...');
-  const liveAfterClaim = await provider.getUtxos(deployer.tokenAddress);
-  const feeUtxosForForge = (await provider.getUtxos(deployer.cashAddress)).filter((u) => !u.token);
+  const feeUtxosForForge = liveAfterClaim.filter((u) => !u.token);
   const forgeBuilt = await buildForgeTx(liveAfterClaim, 5, {
     provider,
     forgeCategory,
@@ -357,6 +439,9 @@ async function main() {
 
   await writeFile(EVIDENCE_FILE, JSON.stringify(deployedReport, null, 2) + '\n', 'utf8');
   console.log(`\n[deploy:chipnet] Deployment complete! Receipt written to ${EVIDENCE_FILE}`);
+  } finally {
+    await provider.disconnect().catch(() => {});
+  }
   process.exit(0);
 }
 

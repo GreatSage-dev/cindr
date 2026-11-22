@@ -6,7 +6,7 @@
   "license": "MIT",
   "scripts": {
     "prestart": "npm run build",
-    "start": "node dist/src/server.js",
+    "start": "node --env-file-if-exists=.env dist/src/server.js",
     "dev": "tsx src/server.ts",
     "sync:vendor": "node scripts/sync-vendor.mjs",
     "build": "node scripts/sync-vendor.mjs && tsc",
