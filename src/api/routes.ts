@@ -18,11 +18,16 @@ import type {
 } from './types.js';
 
 const MODULE_DIR = path.dirname(fileURLToPath(import.meta.url));
-const PROJECT_ROOT = [
-  path.resolve(MODULE_DIR, '..', '..'),
-  path.resolve(MODULE_DIR, '..', '..', '..'),
-  process.cwd(),
-].find((candidate) => existsSync(path.join(candidate, 'package.json'))) ?? process.cwd();
+const PROJECT_ROOT =
+  [
+    path.resolve(MODULE_DIR, '..', '..'),
+    path.resolve(MODULE_DIR, '..', '..', '..'),
+    process.cwd(),
+  ].find(
+    (candidate) =>
+      existsSync(path.join(candidate, 'public', 'index.html')) ||
+      existsSync(path.join(candidate, 'package.json'))
+  ) ?? process.cwd();
 
 const STATIC_ASSET_MAP: Record<string, { filePath: string; contentType: string }> = {
   '/': {

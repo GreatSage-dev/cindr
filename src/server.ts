@@ -132,7 +132,36 @@ export async function startServer(
   };
 }
 
+let defaultServerlessContext: RouteContext | undefined;
+
+function getDefaultServerlessContext(): RouteContext {
+  if (!defaultServerlessContext) {
+    try {
+      defaultServerlessContext = createBlazeContext();
+    } catch (err) {
+      if (process.env.VERCEL) {
+        console.warn(
+          '[cindr] Serverless config fallback to mock mode:',
+          err instanceof Error ? err.message : String(err)
+        );
+        defaultServerlessContext = createBlazeContext({ networkMode: 'mock' });
+      } else {
+        throw err;
+      }
+    }
+  }
+  return defaultServerlessContext;
+}
+
+export default async function handler(
+  req: IncomingMessage,
+  res: ServerResponse
+): Promise<void> {
+  await handleBlazeHttpRequest(req, res, getDefaultServerlessContext());
+}
+
 const isMain =
+  !process.env.VERCEL &&
   process.argv[1] &&
   fileURLToPath(import.meta.url).replace(/\\/g, '/') === process.argv[1].replace(/\\/g, '/');
 

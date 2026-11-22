@@ -42,8 +42,12 @@
     }
   ],
   "functions": {
+    "src/server.ts": {
+      "includeFiles": "{artifacts,public,evidence}/**",
+      "maxDuration": 30
+    },
     "api/**/*.ts": {
-      "includeFiles": "artifacts/**",
+      "includeFiles": "{artifacts,public,evidence}/**",
       "maxDuration": 30
     }
   }
