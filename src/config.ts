@@ -53,7 +53,7 @@ function parseNetworkMode(raw: string | undefined): BchNetworkMode {
  * and requiring an explicit faucet private key whenever running against live networks.
  */
 export function loadAppConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
-  const bchNetwork = parseNetworkMode(env.BCH_NETWORK);
+  let bchNetwork = parseNetworkMode(env.BCH_NETWORK);
   const port = parsePort(env.PORT, 3000);
   const allowedOrigin = (env.ALLOWED_ORIGIN ?? '*').trim() || '*';
 
@@ -69,9 +69,16 @@ export function loadAppConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
 
   const rawFaucetKey = env.FAUCET_PRIVKEY_HEX?.trim();
   if (!rawFaucetKey && bchNetwork !== 'mock') {
-    throw new Error(
-      `FAUCET_PRIVKEY_HEX is required when BCH_NETWORK="${bchNetwork}". Set it in your environment before starting.`
-    );
+    if (env.VERCEL) {
+      console.warn(
+        `[cindr] FAUCET_PRIVKEY_HEX not provided in Vercel env; falling back to mock mode from "${bchNetwork}".`
+      );
+      bchNetwork = 'mock';
+    } else {
+      throw new Error(
+        `FAUCET_PRIVKEY_HEX is required when BCH_NETWORK="${bchNetwork}". Set it in your environment before starting.`
+      );
+    }
   }
   const faucetPrivKeyHex = (rawFaucetKey || DEFAULT_LOCAL_MOCK_FAUCET_KEY).toLowerCase();
   if (!isHex64(faucetPrivKeyHex)) {

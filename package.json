@@ -4,6 +4,9 @@
   "description": "cindr: CashTokens burn-to-mint May 2026 Layla-loop covenant and 0-conf trophy protocol on Bitcoin Cash",
   "type": "module",
   "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "prestart": "npm run build",
     "start": "node --env-file-if-exists=.env dist/src/server.js",

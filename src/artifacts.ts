@@ -1,6 +1,254 @@
 import type { Artifact } from '@cashscript/utils';
-import blazeForgeJson from '../artifacts/BlazeForge.json' with { type: 'json' };
-import stampDispenserJson from '../artifacts/StampDispenser.json' with { type: 'json' };
 
-export const BlazeForgeArtifact: Artifact = blazeForgeJson as unknown as Artifact;
-export const StampDispenserArtifact: Artifact = stampDispenserJson as unknown as Artifact;
+export const BlazeForgeArtifact: Artifact = {
+  "contractName": "BlazeForge",
+  "constructorInputs": [
+    {
+      "name": "forgeCategory",
+      "type": "bytes32"
+    },
+    {
+      "name": "numSlots",
+      "type": "int"
+    },
+    {
+      "name": "registry",
+      "type": "bytes"
+    }
+  ],
+  "abi": [
+    {
+      "name": "forge",
+      "inputs": [
+        {
+          "name": "tier",
+          "type": "int"
+        },
+        {
+          "name": "slotIndexes",
+          "type": "bytes"
+        }
+      ]
+    }
+  ],
+  "bytecode": "OP_3 OP_PICK OP_5 OP_NUMEQUAL OP_4 OP_PICK OP_9 OP_NUMEQUAL OP_BOOLOR OP_4 OP_PICK OP_10 OP_NUMEQUAL OP_BOOLOR OP_VERIFY OP_4 OP_PICK OP_SIZE OP_NIP OP_4 OP_PICK OP_NUMEQUALVERIFY OP_TXINPUTCOUNT OP_1 OP_5 OP_PICK OP_ADD OP_GREATERTHANOREQUAL OP_VERIFY OP_INPUTINDEX OP_0 OP_NUMEQUALVERIFY OP_0 OP_UTXOTOKENCATEGORY OP_OVER OP_2 OP_CAT OP_EQUALVERIFY OP_0 OP_OUTPUTBYTECODE OP_0 OP_UTXOBYTECODE OP_EQUALVERIFY OP_0 OP_OUTPUTTOKENCATEGORY OP_OVER OP_2 OP_CAT OP_EQUALVERIFY OP_0 OP_OUTPUTTOKENAMOUNT OP_0 OP_NUMEQUALVERIFY OP_0 OP_OUTPUTTOKENCOMMITMENT OP_0 OP_EQUALVERIFY OP_0 OP_OUTPUTVALUE e803 OP_GREATERTHANOREQUAL OP_VERIFY OP_0 OP_OUTPUTVALUE OP_0 OP_UTXOVALUE OP_GREATERTHANOREQUAL OP_VERIFY OP_1NEGATE OP_5 OP_ROLL OP_0 OP_1 OP_BEGIN OP_2 OP_PICK OP_1 OP_SPLIT OP_DUP OP_5 OP_ROLL OP_DROP OP_SWAP OP_TOALTSTACK OP_SWAP OP_2SWAP OP_ROT OP_FROMALTSTACK OP_OVER OP_BIN2NUM OP_DUP OP_7 OP_PICK OP_GREATERTHAN OP_VERIFY OP_DUP OP_9 OP_PICK OP_LESSTHAN OP_VERIFY OP_2 OP_PICK OP_OVER OP_1 OP_NUM2BIN OP_EQUALVERIFY OP_9 OP_PICK OP_OVER 21 OP_MUL OP_SPLIT OP_NIP 21 OP_SPLIT OP_DROP OP_DUP 20 OP_SPLIT OP_6 OP_PICK OP_UTXOTOKENCATEGORY OP_SIZE OP_NIP 20 OP_GREATERTHANOREQUAL OP_VERIFY OP_6 OP_PICK OP_UTXOTOKENCATEGORY 20 OP_SPLIT OP_DROP OP_DUP OP_3 OP_PICK OP_EQUALVERIFY OP_OVER ff OP_EQUAL OP_NOTIF OP_7 OP_PICK OP_UTXOTOKENCOMMITMENT OP_2 OP_PICK OP_EQUALVERIFY OP_ENDIF OP_8 OP_PICK OP_7 OP_PICK OP_CAT OP_9 OP_ROLL OP_DROP OP_SWAP OP_TOALTSTACK OP_SWAP OP_TOALTSTACK OP_SWAP OP_TOALTSTACK OP_SWAP OP_TOALTSTACK OP_SWAP OP_TOALTSTACK OP_SWAP OP_2SWAP OP_ROT OP_FROMALTSTACK OP_FROMALTSTACK OP_FROMALTSTACK OP_FROMALTSTACK OP_FROMALTSTACK OP_4 OP_PICK OP_11 OP_ROLL OP_DROP OP_SWAP OP_TOALTSTACK OP_SWAP OP_TOALTSTACK OP_SWAP OP_TOALTSTACK OP_SWAP OP_TOALTSTACK OP_SWAP OP_TOALTSTACK OP_SWAP OP_TOALTSTACK OP_SWAP OP_TOALTSTACK OP_SWAP OP_2SWAP OP_ROT OP_FROMALTSTACK OP_FROMALTSTACK OP_FROMALTSTACK OP_FROMALTSTACK OP_FROMALTSTACK OP_FROMALTSTACK OP_FROMALTSTACK OP_7 OP_ROLL OP_1ADD OP_SWAP OP_TOALTSTACK OP_SWAP OP_TOALTSTACK OP_SWAP OP_TOALTSTACK OP_SWAP OP_TOALTSTACK OP_SWAP OP_2SWAP OP_ROT OP_FROMALTSTACK OP_FROMALTSTACK OP_FROMALTSTACK OP_FROMALTSTACK OP_2DROP OP_2DROP OP_2DROP OP_DROP OP_DUP OP_8 OP_PICK OP_GREATERTHAN OP_UNTIL OP_7 OP_PICK OP_1ADD OP_NUMEQUALVERIFY OP_1 OP_OUTPUTTOKENCATEGORY OP_4 OP_ROLL OP_EQUALVERIFY OP_1 OP_OUTPUTTOKENAMOUNT OP_0 OP_NUMEQUALVERIFY OP_1 OP_OUTPUTTOKENCOMMITMENT OP_6 OP_ROLL OP_1 OP_NUM2BIN OP_ROT OP_CAT OP_EQUALVERIFY OP_1 OP_OUTPUTVALUE e803 OP_GREATERTHANOREQUAL OP_VERIFY OP_TXOUTPUTCOUNT OP_3 OP_LESSTHANOREQUAL OP_VERIFY OP_TXOUTPUTCOUNT OP_3 OP_NUMEQUAL OP_IF OP_2 OP_OUTPUTTOKENCATEGORY OP_0 OP_EQUALVERIFY OP_ENDIF OP_2DROP OP_2DROP OP_1",
+  "source": "pragma cashscript ^0.14.0;\n\n// BlazeForge / StampForge: Universal CashTokens Burn-to-Mint Loop Covenant\n//\n// Registry format (33 bytes per slot):\n//   [bytes32 categoryId][bytes1 commitmentRule]\n//   - commitmentRule == 0xff -> accept any NFT commitment or fungible token (>= 1) of categoryId\n//   - commitmentRule != 0xff -> require NFT with exact 1-byte commitment == commitmentRule\n//\n// Built for BCH BLAZE 2026 TokenHunt (drop-in for buildForgeTx(utxos, tier) in tokenhunt.js)\n// and reusable for Paytaca merchant loyalty punch-cards & credential forging.\ncontract BlazeForge(\n    bytes32 forgeCategory,\n    int numSlots,\n    bytes registry\n) {\n    function forge(int tier, bytes slotIndexes) {\n        // 1. Supported Trophy Tiers: 5 (BLAZE Medallion), 9 (BLAZE Trophy), 10 (Trailblazer Trophy)\n        require(tier == 5 || tier == 9 || tier == 10);\n        require(slotIndexes.length == tier);\n        require(tx.inputs.length >= 1 + tier);\n        require(this.activeInputIndex == 0);\n\n        // 2. Preserve the Forge Minting Baton NFT at Output 0 for instant 0-conf chaining\n        require(tx.inputs[0].tokenCategory == forgeCategory + 0x02);\n        require(tx.outputs[0].lockingBytecode == tx.inputs[0].lockingBytecode);\n        require(tx.outputs[0].tokenCategory == forgeCategory + 0x02);\n        require(tx.outputs[0].tokenAmount == 0);\n        require(tx.outputs[0].nftCommitment == 0x);\n        require(tx.outputs[0].value >= 1000);\n        require(tx.outputs[0].value >= tx.inputs[0].value);\n\n        // 3. Layla (May 2026) OP_BEGIN / OP_UNTIL loop verifying distinct registered stamps [1..tier]\n        int prevSlot = -1;\n        bytes remainingSlots = slotIndexes;\n        bytes usedSlots = 0x;\n        int i = 1;\n\n        do {\n            bytes slotByte, bytes nextRemaining = remainingSlots.split(1);\n            remainingSlots = nextRemaining;\n            int slot = int(slotByte);\n\n            // Strictly ascending canonical slot indices prevent duplicate or negative-zero slot reuse\n            require(slot > prevSlot);\n            require(slot < numSlots);\n            require(slotByte == toPaddedBytes(slot, 1));\n\n            // Read 33-byte slot entry from packed registry: [32B category][1B rule]\n            bytes entry = registry.split(slot * 33)[1].split(33)[0];\n            bytes expectedCat, bytes expectedRule = entry.split(32);\n\n            // Verify stamp input carries the registered token category.\n            // Under CashTokens consensus any UTXO with tokenCategory.length >= 32 holds FT >= 1 and/or an NFT\n            // (immutable NFTs have 32-byte tokenCategory; mutable/minting NFTs have 33 bytes).\n            require(tx.inputs[i].tokenCategory.length >= 32);\n            bytes actualCat = tx.inputs[i].tokenCategory.split(32)[0];\n            require(actualCat == expectedCat);\n\n            // If slot locks a specific 1-byte NFT commitment (e.g. Demo Stamps 0x01..0x05), require exact match\n            if (expectedRule != 0xff) {\n                require(tx.inputs[i].nftCommitment == expectedRule);\n            }\n\n            usedSlots = usedSlots + slotByte;\n            prevSlot = slot;\n            i = i + 1;\n        } while (i <= tier);\n\n        require(i == tier + 1);\n\n        // 4. Output 1 mints the immutable Trophy NFT with provenance commitment [tier][burned slots...]\n        require(tx.outputs[1].tokenCategory == forgeCategory);\n        require(tx.outputs[1].tokenAmount == 0);\n        require(tx.outputs[1].nftCommitment == toPaddedBytes(tier, 1) + usedSlots);\n        require(tx.outputs[1].value >= 1000);\n\n        // 5. Consensus Burn Proof: no other token outputs allowed -> all input stamps are burned\n        require(tx.outputs.length <= 3);\n        if (tx.outputs.length == 3) {\n            require(tx.outputs[2].tokenCategory == 0x);\n        }\n    }\n}\n",
+  "fingerprint": "3006492fca28dceb2a57716e9555a8c54801591e2c07fd330ef6482cb13f1692",
+  "debug": {
+    "bytecode": "5379559c5479599c9b54795a9c9b695479827754799dc351557993a269c0009d00ce78527e8800cd00c78800d178527e8800d3009d00d2008800cc02e803a26900cc00c6a2694f557a0051655279517f76557a757c6b7c727b6c7881765779a0697659799f695279785180885979780121957f7701217f757601207f5679ce82770120a2695679ce01207f75765379887801ff87645779cf52798868587957797e597a757c6b7c6b7c6b7c6b7c6b7c727b6c6c6c6c6c54795b7a757c6b7c6b7c6b7c6b7c6b7c6b7c6b7c727b6c6c6c6c6c6c6c577a8b7c6b7c6b7c6b7c6b7c727b6c6c6c6c6d6d6d75765879a06657798b9d51d1547a8851d3009d51d2567a51807b7e8851cc02e803a269c453a169c4539c6352d10088686d6d51",
+    "sourceMap": "19:16:19:20;;:24::25;:16:::1;:29::33:0;;:37::38;:29:::1;:16;:42::46:0;;:50::52;:42:::1;:16;:8::54;20:16:20:27:0;;:::34:1;;:38::42:0;;:8::44:1;21:16:21:32:0;:36::37;:40::44;;:36:::1;:16;:8::46;22:16:22:37:0;:41::42;:8::44:1;25:26:25:27:0;:16::42:1;:46::59:0;:62::66;:46:::1;:8::68;26:27:26:28:0;:16::45:1;:59::60:0;:49::77:1;:8::79;27:27:27:28:0;:16::43:1;:47::60:0;:63::67;:47:::1;:8::69;28:27:28:28:0;:16::41:1;:45::46:0;:8::48:1;29:27:29:28:0;:16::43:1;:47::49:0;:8::51:1;30:27:30:28:0;:16::35:1;:39::43:0;:16:::1;:8::45;31:27:31:28:0;:16::35:1;:49::50:0;:39::57:1;:16;:8::59;34:23:34:25:0;35:31:35:42;;36:26:36:28;37:16:37:17;39:8:68:28;40:50:40:64;;:71::72;:50::73:1;41:29:41:42:0;:12::43:1;;;;;;;;;42:27:42:35:0;:23::36:1;45:20:45:24:0;:27::35;;:20:::1;:12::37;46:20:46:24:0;:27::35;;:20:::1;:12::37;47:20:47:28:0;;:46::50;:52::53;:32::54:1;:12::56;50:26:50:34:0;;:41::45;:48::50;:41:::1;:26::51;:::54;:61::63:0;:26::64:1;:::67;51:52:51:57:0;:64::66;:52::67:1;56:30:56:31:0;;:20::46:1;:::53;;:57::59:0;:20:::1;:12::61;57:40:57:41:0;;:30::56:1;:63::65:0;:30::66:1;:::69;58:20:58:29:0;:33::44;;:12::46:1;61:16:61:28:0;:32::36;:16:::1;::63:13:0;62:34:62:35;;:24::50:1;:54::66:0;;:16::68:1;61:38:63:13;65:24:65:33:0;;:36::44;;:24:::1;:12::45;;;;;;;;;;;;;;;;;;;;;66:23:66:27:0;;:12::28:1;;;;;;;;;;;;;;;;;;;;;;;;;;;67::67:22;;;;;;;;;;;;;;;;;;39:11:68:9;;;;68:17::18:0;:22::26;;39:8::28:1;;70:21:70:25:0;;:::29:1;:8::31;73:27:73:28:0;:16::43:1;:47::60:0;;:8::62:1;74:27:74:28:0;:16::41:1;:45::46:0;:8::48:1;75:27:75:28:0;:16::43:1;:61::65:0;;:67::68;:47::69:1;:72::81:0;:47:::1;:8::83;76:27:76:28:0;:16::35:1;:39::43:0;:16:::1;:8::45;79:16:79:33:0;:37::38;:16:::1;:8::40;80:12:80:29:0;:33::34;:12:::1;:36:82:9:0;81:31:81:32;:20::47:1;:51::53:0;:12::55:1;80:36:82:9;17:48:83:5;;",
+    "logs": [],
+    "requires": [
+      {
+        "ip": 17,
+        "line": 19
+      },
+      {
+        "ip": 24,
+        "line": 20
+      },
+      {
+        "ip": 31,
+        "line": 21
+      },
+      {
+        "ip": 34,
+        "line": 22
+      },
+      {
+        "ip": 40,
+        "line": 25
+      },
+      {
+        "ip": 45,
+        "line": 26
+      },
+      {
+        "ip": 51,
+        "line": 27
+      },
+      {
+        "ip": 55,
+        "line": 28
+      },
+      {
+        "ip": 59,
+        "line": 29
+      },
+      {
+        "ip": 64,
+        "line": 30
+      },
+      {
+        "ip": 70,
+        "line": 31
+      },
+      {
+        "ip": 97,
+        "line": 45
+      },
+      {
+        "ip": 102,
+        "line": 46
+      },
+      {
+        "ip": 108,
+        "line": 47
+      },
+      {
+        "ip": 129,
+        "line": 56
+      },
+      {
+        "ip": 139,
+        "line": 58
+      },
+      {
+        "ip": 149,
+        "line": 62
+      },
+      {
+        "ip": 236,
+        "line": 70
+      },
+      {
+        "ip": 241,
+        "line": 73
+      },
+      {
+        "ip": 245,
+        "line": 74
+      },
+      {
+        "ip": 254,
+        "line": 75
+      },
+      {
+        "ip": 259,
+        "line": 76
+      },
+      {
+        "ip": 263,
+        "line": 79
+      },
+      {
+        "ip": 271,
+        "line": 81
+      }
+    ],
+    "sourceTags": "221:224:sc"
+  },
+  "compiler": {
+    "name": "cashc",
+    "version": "0.14.0",
+    "options": {
+      "enforceFunctionParameterTypes": true,
+      "enforceLocktimeGuard": true
+    }
+  },
+  "updatedAt": "2026-11-19T19:10:47.991Z"
+} as unknown as Artifact;
+
+export const StampDispenserArtifact: Artifact = {
+  "contractName": "StampDispenser",
+  "constructorInputs": [
+    {
+      "name": "demoCategory",
+      "type": "bytes32"
+    }
+  ],
+  "abi": [
+    {
+      "name": "claim5",
+      "inputs": [
+        {
+          "name": "recipientLockingBytecode",
+          "type": "bytes"
+        }
+      ]
+    }
+  ],
+  "bytecode": "OP_INPUTINDEX OP_0 OP_NUMEQUALVERIFY OP_0 OP_UTXOTOKENCATEGORY OP_OVER OP_2 OP_CAT OP_EQUALVERIFY OP_0 OP_OUTPUTBYTECODE OP_0 OP_UTXOBYTECODE OP_EQUALVERIFY OP_0 OP_OUTPUTTOKENCATEGORY OP_OVER OP_2 OP_CAT OP_EQUALVERIFY OP_0 OP_OUTPUTTOKENAMOUNT OP_0 OP_NUMEQUALVERIFY OP_0 OP_OUTPUTTOKENCOMMITMENT OP_0 OP_EQUALVERIFY OP_0 OP_OUTPUTVALUE e803 OP_GREATERTHANOREQUAL OP_VERIFY OP_0 OP_OUTPUTVALUE OP_0 OP_UTXOVALUE OP_GREATERTHANOREQUAL OP_VERIFY OP_1 OP_BEGIN OP_DUP OP_OUTPUTBYTECODE OP_3 OP_PICK OP_EQUALVERIFY OP_DUP OP_OUTPUTTOKENCATEGORY OP_2 OP_PICK OP_EQUALVERIFY OP_DUP OP_OUTPUTTOKENAMOUNT OP_0 OP_NUMEQUALVERIFY OP_DUP OP_OUTPUTTOKENCOMMITMENT OP_OVER OP_1 OP_NUM2BIN OP_EQUALVERIFY OP_DUP OP_OUTPUTVALUE e803 OP_GREATERTHANOREQUAL OP_VERIFY OP_1ADD OP_DUP OP_5 OP_GREATERTHAN OP_UNTIL OP_6 OP_NUMEQUALVERIFY OP_TXOUTPUTCOUNT OP_7 OP_LESSTHANOREQUAL OP_VERIFY OP_TXOUTPUTCOUNT OP_7 OP_NUMEQUAL OP_IF OP_6 OP_OUTPUTTOKENCATEGORY OP_0 OP_EQUALVERIFY OP_ENDIF OP_2DROP OP_1",
+  "source": "pragma cashscript ^0.14.0;\n\n// StampDispenser: 0-Conf Demo Stamp Faucet Covenant\n//\n// Lets any judge with an empty wallet mint 5 distinct Demo Stamp NFTs (commitments 0x01..0x05)\n// in one 0-conf transaction so they can immediately test BlazeForge on BCH Mainnet or Chipnet.\ncontract StampDispenser(bytes32 demoCategory) {\n    function claim5(bytes recipientLockingBytecode) {\n        // Preserve the Dispenser Minting Baton NFT at Output 0 for instant 0-conf chaining\n        require(this.activeInputIndex == 0);\n        require(tx.inputs[0].tokenCategory == demoCategory + 0x02);\n        require(tx.outputs[0].lockingBytecode == tx.inputs[0].lockingBytecode);\n        require(tx.outputs[0].tokenCategory == demoCategory + 0x02);\n        require(tx.outputs[0].tokenAmount == 0);\n        require(tx.outputs[0].nftCommitment == 0x);\n        require(tx.outputs[0].value >= 1000);\n        require(tx.outputs[0].value >= tx.inputs[0].value);\n\n        // Mint 5 distinct immutable Demo Stamp NFTs (commitments 0x01..0x05) via Layla loop\n        int i = 1;\n        do {\n            require(tx.outputs[i].lockingBytecode == recipientLockingBytecode);\n            require(tx.outputs[i].tokenCategory == demoCategory);\n            require(tx.outputs[i].tokenAmount == 0);\n            require(tx.outputs[i].nftCommitment == toPaddedBytes(i, 1));\n            require(tx.outputs[i].value >= 1000);\n            i = i + 1;\n        } while (i <= 5);\n\n        require(i == 6);\n\n        // Allow optional pure-BCH fee change at Output 6 with zero extra tokens\n        require(tx.outputs.length <= 7);\n        if (tx.outputs.length == 7) {\n            require(tx.outputs[6].tokenCategory == 0x);\n        }\n    }\n}\n",
+  "fingerprint": "5c0eddaeec3a97e637a1ede2dfa2de1e013e55a10311cb067106c3afc19c496d",
+  "debug": {
+    "bytecode": "c0009d00ce78527e8800cd00c78800d178527e8800d3009d00d2008800cc02e803a26900cc00c6a269516576cd53798876d152798876d3009d76d27851808876cc02e803a2698b7655a066569dc457a169c4579c6356d10088686d51",
+    "sourceMap": "10:16:10:37;:41::42;:8::44:1;11:26:11:27:0;:16::42:1;:46::58:0;:61::65;:46:::1;:8::67;12:27:12:28:0;:16::45:1;:59::60:0;:49::77:1;:8::79;13:27:13:28:0;:16::43:1;:47::59:0;:62::66;:47:::1;:8::68;14:27:14:28:0;:16::41:1;:45::46:0;:8::48:1;15:27:15:28:0;:16::43:1;:47::49:0;:8::51:1;16:27:16:28:0;:16::35:1;:39::43:0;:16:::1;:8::45;17:27:17:28:0;:16::35:1;:49::50:0;:39::57:1;:16;:8::59;20:16:20:17:0;21:8:28:25;22:31:22:32;:20::49:1;:53::77:0;;:12::79:1;23:31:23:32:0;:20::47:1;:51::63:0;;:12::65:1;24:31:24:32:0;:20::45:1;:49::50:0;:12::52:1;25:31:25:32:0;:20::47:1;:65::66:0;:68::69;:51::70:1;:12::72;26:31:26:32:0;:20::39:1;:43::47:0;:20:::1;:12::49;27::27:22;28:17:28:18:0;:22::23;21:8::25:1;;30:21:30:22:0;:8::24:1;33:16:33:33:0;:37::38;:16:::1;:8::40;34:12:34:29:0;:33::34;:12:::1;:36:36:9:0;35:31:35:32;:20::47:1;:51::53:0;:12::55:1;34:36:36:9;8:52:37:5;",
+    "logs": [],
+    "requires": [
+      {
+        "ip": 3,
+        "line": 10
+      },
+      {
+        "ip": 9,
+        "line": 11
+      },
+      {
+        "ip": 14,
+        "line": 12
+      },
+      {
+        "ip": 20,
+        "line": 13
+      },
+      {
+        "ip": 24,
+        "line": 14
+      },
+      {
+        "ip": 28,
+        "line": 15
+      },
+      {
+        "ip": 33,
+        "line": 16
+      },
+      {
+        "ip": 39,
+        "line": 17
+      },
+      {
+        "ip": 46,
+        "line": 22
+      },
+      {
+        "ip": 51,
+        "line": 23
+      },
+      {
+        "ip": 55,
+        "line": 24
+      },
+      {
+        "ip": 61,
+        "line": 25
+      },
+      {
+        "ip": 66,
+        "line": 26
+      },
+      {
+        "ip": 73,
+        "line": 30
+      },
+      {
+        "ip": 77,
+        "line": 33
+      },
+      {
+        "ip": 85,
+        "line": 35
+      }
+    ]
+  },
+  "compiler": {
+    "name": "cashc",
+    "version": "0.14.0",
+    "options": {
+      "enforceFunctionParameterTypes": true,
+      "enforceLocktimeGuard": true
+    }
+  },
+  "updatedAt": "2026-11-19T19:10:56.374Z"
+} as unknown as Artifact;

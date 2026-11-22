@@ -4,8 +4,16 @@
   "cleanUrls": true,
   "rewrites": [
     {
+      "source": "/",
+      "destination": "/index.html"
+    },
+    {
       "source": "/dashboard",
       "destination": "/dashboard.html"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "/api"
     }
   ],
   "headers": [
@@ -42,10 +50,6 @@
     }
   ],
   "functions": {
-    "src/server.ts": {
-      "includeFiles": "{artifacts,public,evidence}/**",
-      "maxDuration": 30
-    },
     "api/**/*.ts": {
       "includeFiles": "{artifacts,public,evidence}/**",
       "maxDuration": 30
